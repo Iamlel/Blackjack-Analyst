@@ -1,29 +1,27 @@
 package me.lel.core;
 
-// ORDER MATTERS
 public enum Card {
-    ACE(4),
-    TWO(4),
-    THREE(4),
+    ACE(1),
+    TWO(2),
+    THREE(3),
     FOUR(4),
-    FIVE(4),
-    SIX(4),
-    SEVEN(4),
-    EIGHT(4),
-    NINE(4),
-    TEN(16);
+    FIVE(5),
+    SIX(6),
+    SEVEN(7),
+    EIGHT(8),
+    NINE(9),
+    TEN(10),
+    JACK(10),
+    QUEEN(10),
+    KING(10);
 
-    private final int amount;
+    private final int value;
 
-    Card(int amount) {
-        this.amount = amount;
-    }
-
-    public int getAmount() {
-        return amount;
+    Card(int value) {
+        this.value = value;
     }
 
     public int getValue() {
-        return this.ordinal() + 1;
+        return this.value;
     }
 }

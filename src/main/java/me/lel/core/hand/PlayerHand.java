@@ -2,22 +2,20 @@ package me.lel.core.hand;
 
 import me.lel.core.Card;
 
-import java.util.List;
-
 public class PlayerHand extends Hand {
     private final boolean beenSplit;
     private int bet;
 
-    public PlayerHand(int bet, List<Card> cards) {
+    public PlayerHand(int bet, Card first, Card second) {
         this.beenSplit = false;
         this.bet = bet;
-        super(cards);
+        super(first, second);
     }
 
-    public PlayerHand(int bet, List<Card> cards, boolean split) {
+    public PlayerHand(int bet, Card first, Card second, boolean split) {
         this.beenSplit = split;
         this.bet = bet;
-        super(cards);
+        super(first, second);
     }
 
     public int bet() {
@@ -29,10 +27,15 @@ public class PlayerHand extends Hand {
     }
 
     public boolean canSplit() {
-        return (super.isInitial() && super.getCards().getFirst() == super.getCards().getLast());
+        return (super.isInitial() && super.getFirst() == super.getSecond());
     }
 
     public boolean hasBeenSplit() {
         return this.beenSplit;
+    }
+
+    @Override
+    public boolean isBlackjack() {
+        return (super.isBlackjack() && !this.hasBeenSplit());
     }
 }

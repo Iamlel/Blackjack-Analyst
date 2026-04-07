@@ -1,6 +1,6 @@
-package me.lel.core;
+package me.lel.core.action;
 
-public enum Action {
+public enum Action implements SimpleAction {
     SURRENDER,
     SPLIT,
     DOUBLE,

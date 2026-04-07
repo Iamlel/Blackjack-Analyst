@@ -1,26 +1,39 @@
 package me.lel;
 
 import me.lel.core.Rules;
-import me.lel.counting.HiLoCountSystem;
+import me.lel.counting.impl.HiLoCountSystem;
+import me.lel.game.Blackjack;
 import me.lel.player.Player;
-import me.lel.player.strategy.H17BasicStrategy;
+import me.lel.player.better.impl.BetSpread;
+import me.lel.player.mover.Mover;
+import me.lel.player.mover.impl.datadrivenmover.DataDrivenMover;
+import me.lel.player.sidebet.SideBetMover;
+import me.lel.simulation.Simulation;
 
-import javax.swing.*;
-import java.awt.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Objects;
 
 public class Main {
 
-    static void main(String[] args) {
-        Player player = new Player(1000000, new H17BasicStrategy());
-        Rules rules = new Rules.Builder().minimumBet(1).surrender(false).h17(true).insuranceAllowed(false).splitAmount(3).build();
-        Blackjack bj = new Blackjack(new Player[]{player}, new HiLoCountSystem(), rules);
-        int hands = 300000;
-        for (int i = 0; i < hands; i++) {
-            bj.play();
-        }
-        System.out.println("Bankroll: " + player.getBankroll());
-        System.out.println("Difference: " + (player.getBankroll() - 1000000));
-        System.out.println("Average: " + (player.getBankroll() - 1000000) / hands);
+    static void main(String[] args) throws IOException {
+        SideBetMover sideBetMover = SideBetMover.load(getReader("sidebet.csv"));
+        Mover m = DataDrivenMover.load(getReader("H17Deviations.csv"));
+        Rules rules = new Rules.Builder().build();
+
+        Player player = new Player(10_000, m, BetSpread.load(getReader("samplebet.csv")), sideBetMover);
+
+        Blackjack bj = new Blackjack(new Player[]{player}, new HiLoCountSystem(), rules, 6);
+
+        Simulation test = new Simulation(bj, 10, true);
+        test.run(1_000_000);
+        test.view(0, 100);
+        test.display();
+    }
+
+    public static BufferedReader getReader(String name) {
+        return new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream(name))));
     }
 }
 

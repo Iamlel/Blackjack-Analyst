@@ -1,20 +1,13 @@
-package me.lel.player.strategy;
+package me.lel.player.mover.impl;
 
-import me.lel.core.Action;
-import me.lel.core.Rules;
+import me.lel.core.ActiveRules;
+import me.lel.core.action.Action;
+import me.lel.player.mover.Mover;
 
-public class H17BasicStrategy implements Strategy {
+public class H17BasicMover implements Mover {
 
     @Override
-    public Action action(
-            int hand,
-            int dealerHand,
-            boolean soft,
-            boolean canSplit,
-            Rules rules,
-            double count
-    ) {
-
+    public Action action(int hand, int dealerHand, boolean soft, ActiveRules rules, double trueCount) {
         if (dealerHand == 1) {
             dealerHand += 10;
         }
@@ -22,12 +15,12 @@ public class H17BasicStrategy implements Strategy {
         // ------------------------
         // LATE SURRENDER OPTIONS
         // ------------------------
-        if (rules.isSurrenderAllowed() && !soft) {
+        if (rules.canSurrender() && !soft) {
             // surrender 17 on A
             if (hand == 17 && dealerHand == 11) return Action.SURRENDER;
 
             // surrender 16 vs 9,10,A
-            if (hand == 16 && (dealerHand == 11 || (!canSplit && dealerHand >= 9))) {
+            if (hand == 16 && (dealerHand == 11 || (!rules.canSplit() && dealerHand >= 9))) {
                 return Action.SURRENDER;
             }
 
@@ -40,7 +33,7 @@ public class H17BasicStrategy implements Strategy {
         // ------------------------
         // PAIR SPLITTING
         // ------------------------
-        if (canSplit) {
+        if (rules.canSplit()) {
             switch (hand) {
                 case 20:  // T,T
                     return Action.STAND;
@@ -53,8 +46,9 @@ public class H17BasicStrategy implements Strategy {
                     if (dealerHand <= 7) return Action.SPLIT;
                     break;
                 case 12:  // 6,6
-                    if (dealerHand <= 6)
+                    if (soft || (dealerHand <= 6)) {
                         return Action.SPLIT;
+                    }
                     break;
                 case 10: // 5,5
                     break;
@@ -134,7 +128,7 @@ public class H17BasicStrategy implements Strategy {
         }
 
         // Hard 13–16
-        if (hand >= 13 && hand <= 16) {
+        if (hand >= 13) {
             if (dealerHand <= 6) return Action.STAND;
             return Action.HIT;
         }
@@ -144,7 +138,7 @@ public class H17BasicStrategy implements Strategy {
     }
 
     @Override
-    public boolean insurance(double count) {
-        return false; // never take insurance in basic
+    public boolean earlySurrender(int handValue, int dealer, boolean soft, double trueCount) {
+        return false;
     }
 }

@@ -4,14 +4,19 @@ public class Rules {
     private final int minimumBet;
     private final int maximumBet;
     private final double penetration;
-    private final boolean h17;
-    private final boolean das;
+    private final boolean h17; // hit17
+    private final boolean das; // double after split
+    private final boolean sas; // surrender after split
     private final int splitAmount;
+    private final boolean insuranceAllowed;
     private final double insurancePay;
     private final double blackjackPay;
     private final int maxHands;
-    private final boolean surrender;
-    private final boolean insuranceAllowed;
+    private final boolean lateSurrender;
+    private final boolean earlySurrender;
+    private final boolean reSplitAces;
+    private final boolean hitSplitAces;
+    private final boolean doubleSplitAces;
 
     public Rules(Builder builder) {
         this.minimumBet = builder.minimumBet;
@@ -19,12 +24,17 @@ public class Rules {
         this.penetration = builder.penetration;
         this.h17 = builder.h17;
         this.das = builder.das;
+        this.sas = builder.sas;
         this.splitAmount = builder.splitAmount;
+        this.insuranceAllowed = builder.insuranceAllowed;
         this.insurancePay = builder.insurancePay;
         this.blackjackPay = builder.blackjackPay;
         this.maxHands = builder.maxHands;
-        this.surrender = builder.surrender;
-        this.insuranceAllowed = builder.insuranceAllowed;
+        this.lateSurrender = builder.lateSurrender;
+        this.earlySurrender = builder.earlySurrender;
+        this.reSplitAces = builder.reSplitAces;
+        this.hitSplitAces = builder.hitSplitAces || builder.doubleSplitAces;
+        this.doubleSplitAces = builder.doubleSplitAces;
     }
 
     public int getMinimumBet() {
@@ -47,6 +57,10 @@ public class Rules {
         return das;
     }
 
+    public boolean isSas() {
+        return sas;
+    }
+
     public int getSplitAmount() {
         return splitAmount;
     }
@@ -63,12 +77,49 @@ public class Rules {
         return maxHands;
     }
 
-    public boolean isSurrenderAllowed() {
-        return surrender;
+    public boolean isLateSurrender() {
+        return lateSurrender;
+    }
+
+    public boolean isEarlySurrender() {
+        return earlySurrender;
     }
 
     public boolean isInsuranceAllowed() {
         return insuranceAllowed;
+    }
+
+    public boolean isReSplitAces() {
+        return reSplitAces;
+    }
+
+    public boolean isHitSplitAces() {
+        return hitSplitAces;
+    }
+
+    public boolean isDoubleSplitAces() {
+        return doubleSplitAces;
+    }
+
+    @Override
+    public String toString() {
+        return "Rules"
+                + "\nMinimum Bet: " + this.minimumBet
+                + "\nMaximum Bet: " + this.maximumBet
+                + "\nPenetration: " + this.penetration + "%"
+                + "\nHit 17: " + this.h17
+                + "\nDouble After Split: " + this.das
+                + "\nSplit After Split: " + this.sas
+                + "\nSplit Amount: " + this.splitAmount
+                + "\nInsurance Allowed?: " + this.insuranceAllowed
+                + "\nInsurance Multiplier: " + this.insurancePay
+                + "\nBlackjack Multiplier: " + this.blackjackPay
+                + "\nMaximum Hands: " + this.maxHands
+                + "\nLate Surrender: " + this.lateSurrender
+                + "\nEarly Surrender: " + this.earlySurrender
+                + "\nResplit Aces Allowed?: " + this.reSplitAces
+                + "\nHit Split Aces Allowed?: " + this.hitSplitAces
+                + "\nDouble Split Aces Allowed?: " + this.doubleSplitAces;
     }
 
     public static Rules buildDefault() {
@@ -81,12 +132,17 @@ public class Rules {
         private double penetration = 0.83;
         private boolean h17 = true;
         private boolean das = true;
+        private boolean sas = false;
         private int splitAmount = 3;
+        private boolean insuranceAllowed = true;
         private double insurancePay = 2;
         private double blackjackPay = (double) 3 / 2;
         private int maxHands = 2;
-        private boolean surrender = true;
-        private boolean insuranceAllowed = true;
+        private boolean lateSurrender = true;
+        private boolean earlySurrender = false;
+        private boolean reSplitAces = false;
+        private boolean hitSplitAces = false;
+        private boolean doubleSplitAces = false;
 
         /**
          * @param minimumBet must be >= 1
@@ -131,6 +187,11 @@ public class Rules {
 
         public Builder das(boolean das) {
             this.das = das;
+            return this;
+        }
+
+        public Builder sas(boolean sas) {
+            this.sas = sas;
             return this;
         }
 
@@ -182,13 +243,33 @@ public class Rules {
             return this;
         }
 
-        public Builder surrender(boolean surrender) {
-            this.surrender = surrender;
+        public Builder lateSurrender(boolean lateSurrender) {
+            this.lateSurrender = lateSurrender;
+            return this;
+        }
+
+        public Builder earlySurrender(boolean earlySurrender) {
+            this.earlySurrender = earlySurrender;
             return this;
         }
 
         public Builder insuranceAllowed(boolean insuranceAllowed) {
             this.insuranceAllowed = insuranceAllowed;
+            return this;
+        }
+
+        public Builder reSplitAces(boolean reSplitAces) {
+            this.reSplitAces = reSplitAces;
+            return this;
+        }
+
+        public Builder hitSplitAces(boolean hitSplitAces) {
+            this.hitSplitAces = hitSplitAces;
+            return this;
+        }
+
+        public Builder doubleSplitAces(boolean doubleSplitAces) {
+            this.doubleSplitAces = doubleSplitAces;
             return this;
         }
 

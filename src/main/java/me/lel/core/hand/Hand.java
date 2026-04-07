@@ -2,23 +2,23 @@ package me.lel.core.hand;
 
 import me.lel.core.Card;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public class Hand {
-    private final List<Card> cards;
-    private int runningHandTotal;
+    private int runningHandTotal = 0;
+
+    private final Card first;
+    private final Card second;
+
+    private boolean initial;
     private boolean soft;
 
-    public Hand(List<Card> cards) {
-        this.cards = new ArrayList<>(cards);
-        this.runningHandTotal = Hand.getHandValue(cards);
+    public Hand(Card first, Card second) {
+        this.first = first;
+        this.second = second;
 
-        if (this.cards.contains(Card.ACE)) {
-            this.runningHandTotal += 10;
-            this.soft = true;
-        }
+        this.addCard(first);
+        this.addCard(second);
+
+        this.initial = true;
     }
 
     public int getHandValue() {
@@ -26,7 +26,6 @@ public class Hand {
     }
 
     public void addCard(Card card) {
-        this.cards.add(card);
         this.runningHandTotal += card.getValue();
 
         if (soft) {
@@ -38,33 +37,29 @@ public class Hand {
             this.runningHandTotal += 10;
             this.soft = true;
         }
+
+        if (initial) {
+            this.initial = false;
+        }
     }
 
     public boolean isSoft() {
-        return soft;
+        return this.soft;
     }
 
     public boolean isBlackjack() {
-        return (this.isInitial() && this.runningHandTotal == 21);
+        return (this.initial && this.runningHandTotal == 21);
     }
 
     public Card getFirst() {
-        return cards.getFirst();
+        return this.first;
+    }
+
+    public Card getSecond() {
+        return this.second;
     }
 
     public boolean isInitial() {
-        return (cards.size() == 2);
-    }
-
-    public static int getHandValue(List<Card> hand) {
-        int handValue = 0;
-        for (Card c : hand) {
-            handValue += c.getValue();
-        }
-        return handValue;
-    }
-
-    public List<Card> getCards() {
-        return Collections.unmodifiableList(cards);
+        return this.initial;
     }
 }

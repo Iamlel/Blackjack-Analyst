@@ -8,56 +8,49 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Deck {
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
 
-    private Map<Card, Integer> deck;
-    private final int decks;
-    private int cardCount;
+    private final Card[] deck;
+    private int topIndex;
     private final int lastCard;
 
     private final CountSystem countSystem;
     private int runningCount;
 
     public Deck(int decks, CountSystem countSystem, double penetration) {
-        this.decks = decks;
         this.countSystem = countSystem;
         this.lastCard = (int) (52 * decks * (1 - penetration));
+
+        this.deck = new Card[52 * decks];
+        for (int d = 0; d < decks * 4; d++) {
+            System.arraycopy(Card.values(), 0, this.deck, d * 13, 13);
+        }
+        this.shuffleDeck();
     }
 
     public Card takeCard() {
-        if (cardCount == 0) {
+        if (topIndex == deck.length) {
             shuffleDeck();
         }
 
-        Card randomCard = this.randomCard();
-        cardCount -= 1;
+        Card randomCard = deck[topIndex++];
         runningCount += countSystem.value(randomCard);
-        this.deck.put(randomCard, this.deck.get(randomCard) - 1);
         return randomCard;
-    }
-
-    private Card randomCard() {
-        int r = this.random.nextInt(this.cardCount);
-        for (Map.Entry<Card, Integer> entry : this.deck.entrySet()) {
-            r -= entry.getValue();
-            if (r < 0) {;
-                return entry.getKey();
-            }
-        }
-        // No cards are left
-        return null;
     }
 
     // make sure to finish current hand before shuffling unless you absolutely have to
     public void shuffleDeck() {
-        this.deck = new EnumMap<>(Card.class);
-        for (Card e : Card.values()) {
-            this.deck.put(e, e.getAmount() * decks);
+        for (int i = deck.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1); // 0 <= j <= i
+            // Swap deck[i] and deck[j]
+            Card temp = deck[i];
+            deck[i] = deck[j];
+            deck[j] = temp;
         }
-        this.cardCount = 52 * decks;
+        this.topIndex = 0;
         this.runningCount = 0;
     }
 
     public boolean isShuffleNecessary() {
-        return (cardCount <= lastCard);
+        return (this.deck.length - this.topIndex <= this.lastCard);
     }
 
     public int getRunningCount() {
@@ -65,6 +58,6 @@ public class Deck {
     }
 
     public double getTrueCount() {
-        return (double) runningCount / (cardCount / 52.0);
+        return (double) this.runningCount / ((this.deck.length - this.topIndex) / 52.0);
     }
 }
