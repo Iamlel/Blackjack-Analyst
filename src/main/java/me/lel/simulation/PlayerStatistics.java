@@ -62,11 +62,15 @@ public class PlayerStatistics {
     }
 
     public double getSharpeRatio() {
-        return this.getEV() / this.getStandardDeviation();
+        return this.getUnitEV() / this.getStandardDeviation();
     }
 
     public double getNZero() {
         return this.getVariance() / (this.getUnitEV() * this.getUnitEV());
+    }
+
+    public double getSCORE() {
+        return 1_000_000 * getSharpeRatio() * getSharpeRatio();
     }
 
     // have to fully test this but I think it should work
