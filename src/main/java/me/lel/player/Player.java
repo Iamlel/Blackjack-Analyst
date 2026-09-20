@@ -10,6 +10,7 @@ import me.lel.player.sidebet.SideBetMover;
 import java.util.Arrays;
 
 public class Player {
+    private final double startingBankroll;
     private double bankroll;
 
     private final Mover mover;
@@ -17,6 +18,7 @@ public class Player {
     private final SideBetMover sideBet;
 
     public Player(double bankroll, Mover mover, Better better, SideBetMover sideBet) {
+        this.startingBankroll = bankroll;
         this.bankroll = bankroll;
         this.mover = mover;
         this.better = better;
@@ -53,6 +55,10 @@ public class Player {
 
     public void take(double amount) {
         this.bankroll -= amount;
+    }
+
+    public void resetBankroll() {
+        this.bankroll = startingBankroll;
     }
 
     public boolean has(double amount) {

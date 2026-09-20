@@ -1,75 +1,75 @@
 package me.lel.simulation;
 
-import me.lel.game.Game;
+import me.lel.game.SimpleGame;
 import me.lel.player.Player;
-import org.math.plot.Plot2DPanel;
+import me.lel.simulation.ssj.BlackjackTally;
+import me.lel.simulation.ssj.BlackjackTallyList;
+import umontreal.ssj.mcqmctools.MonteCarloExperiment;
+import umontreal.ssj.rng.MRG32k3a;
+import umontreal.ssj.rng.RandomStream;
+import umontreal.ssj.stat.list.ListOfTalliesWithCovariance;
 
-import javax.swing.*;
-import java.awt.*;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 
+// FIXME : clarify everywhere that when you run the sim it is rounds not hands and make sure that it is.
+// TODO : kill dead players
 public class Simulation {
-    private final Game game;
-    private final List<SimulatedPlayer> players = new ArrayList<>();;
+    private final RandomStream stream = new MRG32k3a();
+    private final SimpleGame game;
+    private BlackjackTallyList<BlackjackTally> playerStatContainer;
 
-    /**
-     * @param game The Game to simulate.
-     */
-    public Simulation(Game game) {
-        this(game, 1, true);
-    }
+    public Simulation(SimpleGame game) {
+        assert game.getPlayers().length == game.getPerformanceDim();
 
-    /**
-     * @param game The Game to simulate.
-     * @param saveData Whether data should be saved in an array to graph.
-     */
-    public Simulation(Game game, boolean saveData) {
-        this(game, 1, saveData);
-    }
-
-    /**
-     * @param game The Game to simulate.
-     * @param dx The interval at which the data is saved.
-     * @param saveData Whether data should be saved in an array to graph.
-     */
-    public Simulation(Game game, int dx, boolean saveData) {
         this.game = game;
-
-        for (Player player : game.getPlayers()) {
-            players.add(new SimulatedPlayer(player, new PlayerStatistics(player.getBankroll(), game.getRules().getMinimumBet()), saveData, dx));
-        }
+        this.playerStatContainer = BlackjackTallyList.create(game);
     }
 
-    public void run(int simulations) {
-        for (int i = 0; i < simulations; i++) {
-            game.play();
-            for (SimulatedPlayer player : players) {
-                player.update();
-            }
-        }
+    public void run(int hands) {
+        MonteCarloExperiment.simulateRuns(game, hands, stream, playerStatContainer);
     }
 
-    public void viewFirst() {
-        view(0, 0);
+    public void runWithDisplay(int hands) {
+        Graph graph = new Graph(playerStatContainer, hands);
+        runWithDisplay(hands, graph);
     }
 
-    public void viewFirst(int handsPerHour) {
-        view(0, handsPerHour);
+    public void runWithDisplay(int hands, int dx) {
+        Graph graph = new Graph(playerStatContainer, hands);
+        graph.setDx(dx);
+        runWithDisplay(hands, graph);
     }
 
-    public void view(int i) {
-        view(i, 0);
+    public void runWithDisplay(int hands, Graph graph) {
+        this.run(hands);
+        graph.display();
+        graph.close();
     }
 
-    public void view(int i, int handsPerHour) {
-        if (i >= players.size()) {
+    public void firstResults() {
+        results(0, 0);
+    }
+
+    public void firstResults(int handsPerHour) {
+        results(0, handsPerHour);
+    }
+
+    public void results(int i) {
+        results(i, 0);
+    }
+
+    public void results(int i, int handsPerHour) {
+        if (i >= playerStatContainer.size()) {
             throw new IndexOutOfBoundsException("There are not enough players for that.");
         }
 
-        Player player = players.get(i).getPlayer();
-        PlayerStatistics playerStatistics = this.getPlayerStatistics(i);
+        Player player = this.getPlayer(i);
+        BlackjackTally playerStatistics = playerStatContainer.get(i);
+
+        if (playerStatistics.getN() == 0) {
+            throw new IllegalStateException("There are no hands to look at yet.");
+        }
+
         DecimalFormat df = new DecimalFormat("#,###.##");
 
         System.out.println();
@@ -84,6 +84,7 @@ public class Simulation {
         System.out.println();
         System.out.println("Profit");
         System.out.println("EV ($/hand): ~$" + df.format(playerStatistics.getEV()));
+        System.out.println("95% CI ($/hand): +/- $" + new DecimalFormat("#.####").format(playerStatistics.getMarginOfError()));
 
         if (handsPerHour > 0) {
             System.out.println("EV ($/hr): ~$" + df.format(playerStatistics.getEV() * handsPerHour));
@@ -97,66 +98,45 @@ public class Simulation {
         System.out.println();
         System.out.println("Additional Information");
         System.out.println("Risk of Ruin: ~" + df.format(playerStatistics.getROR()) + "%");
-        System.out.println("Kelly bet (units): ~" + df.format(playerStatistics.getKelly()));
         System.out.println("N0 (hands): ~" + String.format("%,d", (int) Math.ceil(playerStatistics.getNZero())));
         System.out.println("Sharpe Ratio: ~" + new DecimalFormat("#.####").format(playerStatistics.getSharpeRatio()));
     }
 
-    public void display() {
-        if (players.getFirst().getData().length == 0) {
-            return;
+    public void reset() {
+        Player[] players = game.getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            players[i].resetBankroll();
         }
-
-        Plot2DPanel plot = new Plot2DPanel();
-
-        plot.setAxisLabel(0, "Hands");
-        plot.setAxisLabel(1, "Bankroll Change");
-        plot.addLegend("NORTH");
-
-        if (players.size() == 1) {
-            SimulatedPlayer player = players.getFirst();
-
-            plot.addLinePlot("Player", player.getData());
-
-            int n = Math.toIntExact(player.getPlayerStatistics().getN());
-            double[] y = new double[n];
-            for (int i = 0; i < n; i++) {
-                y[i] = player.getPlayerRegression().getSlope() * i;
-            }
-            plot.addLinePlot("EV ($)", y);
-
-        } else {
-            for (int i = 1; i <= players.size(); i++) {
-                plot.addLinePlot("Player " + i, players.get(i - 1).getData());
-            }
-        }
-
-        JFrame frame = new JFrame("Blackjack Analyst");
-        frame.setContentPane(plot);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-
-        int width = (int) (screenSize.width * 0.75);
-        int height = (int) (screenSize.height * 0.75);
-        frame.setSize(width, height);
-
-        frame.setLocation((screenSize.width - width) / 2, (screenSize.height - height) / 2);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        game.reset();
+        this.resetRandom();
+        this.resetStatistics();
     }
 
-    public PlayerStatistics getPlayerStatistics() {
-        return players.getFirst().getPlayerStatistics();
+    public void resetRandom() {
+        stream.resetStartStream();
     }
 
-    public PlayerStatistics getPlayerStatistics(int i) {
-        return players.get(i).getPlayerStatistics();
+    public void resetStatistics() {
+        this.playerStatContainer = BlackjackTallyList.create(game);
     }
 
-    public Player getPlayer() {
-        return players.getFirst().getPlayer();
+    public ListOfTalliesWithCovariance<BlackjackTally> getPlayerStatContainer() {
+        return playerStatContainer;
+    }
+
+    public BlackjackTally getFirstStats() {
+        return playerStatContainer.getFirst();
+    }
+
+    public BlackjackTally getStats(int i) {
+        return playerStatContainer.get(i);
+    }
+
+    public Player getFirstPlayer() {
+        return game.getPlayers()[0];
     }
 
     public Player getPlayer(int i) {
-        return players.get(i).getPlayer();
+        return game.getPlayers()[i];
     }
 }

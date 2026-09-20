@@ -8,7 +8,10 @@ import me.lel.player.better.impl.BetSpread;
 import me.lel.player.mover.Mover;
 import me.lel.player.mover.impl.datadrivenmover.DataDrivenMover;
 import me.lel.player.sidebet.SideBetMover;
+import me.lel.simulation.ssj.BlackjackTallyList;
 import me.lel.simulation.Simulation;
+import umontreal.ssj.mcqmctools.MonteCarloExperiment;
+import umontreal.ssj.rng.MRG32k3a;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,10 +29,11 @@ public class Main {
 
         Blackjack bj = new Blackjack(new Player[]{player}, new HiLoCountSystem(), rules, 6);
 
-        Simulation test = new Simulation(bj, 10, true);
-        test.run(1_000_000);
-        test.view(0, 100);
-        test.display();
+        MonteCarloExperiment.simulateRuns(bj, 1000, new MRG32k3a(), BlackjackTallyList.create(bj));
+
+        Simulation test = new Simulation(bj);
+        test.runWithDisplay(500_000_000);
+        test.results(0, 100);
     }
 
     public static BufferedReader getReader(String name) {
