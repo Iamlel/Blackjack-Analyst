@@ -80,19 +80,17 @@ public class FreeBetBlackjack extends Blackjack {
     }
 
     /**
-     * Settles like {@link Blackjack}, except that a dealer 22 pushes, a free hand never loses, and a hand that lost
-     * after a free double loses only its original bet.
+     * Settles like {@link Blackjack}, except that a dealer 22 pushes every hand that didn't bust, a free hand never
+     * loses, and a hand that lost after a free double loses only its original bet.
      */
     @Override
     protected void compareHands() {
-        if (super.getDealerHand().getHandValue() == 22) {
-            return;
-        }
-
         for (Player player : super.getInternalPlayers()) {
             for (PlayerHand hand : super.getHands(player)) {
                 if (hand.getHandValue() > 21) {
                     take(player, freeDoubles.contains(hand) ? (double) hand.bet() / 2 : hand.bet(), freeHands.contains(hand));
+                } else if (super.getDealerHand().getHandValue() == 22) {
+                    continue;
                 } else if (super.getDealerHand().getHandValue() > 21 || (hand.getHandValue() > super.getDealerHand().getHandValue())) {
                     pay(player, hand.bet());
                 } else if (hand.getHandValue() < super.getDealerHand().getHandValue()) {
