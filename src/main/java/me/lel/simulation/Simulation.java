@@ -43,7 +43,7 @@ public class Simulation {
 
     /**
      * Plays {@code rounds} rounds like {@link #run}, then opens a window charting each player's bankroll with about
-     * 500 points per player. Closing the window exits the JVM.
+     * 500 points per player.
      */
     public void runWithDisplay(int rounds) {
         Graph graph = new Graph(playerStatContainer, rounds);

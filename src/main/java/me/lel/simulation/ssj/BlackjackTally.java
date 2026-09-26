@@ -2,6 +2,8 @@ package me.lel.simulation.ssj;
 
 import umontreal.ssj.stat.Tally;
 
+// TODO : Make a different Tally that has order included so we can have drawdown in that and put that in the Simulation lib that you make
+
 /**
  * An SSJ {@link Tally} of one player's profit per round, in dollars, with blackjack statistics on top.
  * <p>
