@@ -16,6 +16,8 @@ public class SimpleBetSpread implements Better {
 
     /**
      * Creates a spread that never sits out.
+     *
+     * @param betSpread bets for true counts 0, 1, 2 and so on
      */
     public SimpleBetSpread(List<Bet> betSpread) {
         this.betSpread = betSpread;
@@ -24,6 +26,9 @@ public class SimpleBetSpread implements Better {
 
     /**
      * Creates a spread that sits out at or below a true count of {@code minimum}, or never if it is {@code null}.
+     *
+     * @param betSpread bets for true counts 0, 1, 2 and so on
+     * @param minimum   true count at or below which the player sits out, or {@code null}
      */
     public SimpleBetSpread(List<Bet> betSpread, Integer minimum) {
         this.betSpread = betSpread;
@@ -48,8 +53,10 @@ public class SimpleBetSpread implements Better {
     }
 
     /**
-     * Returns a sample spread of one hand from 1 to 8 units, rising with each true count from 0 to 5. It sits out at
-     * -3 or below.
+     * Returns a sample spread of one hand from 1 to 8 units, rising with each true count from 0 to 5. It sits out at -3
+     * or below.
+     *
+     * @return the sample spread
      */
     public static Better useSampleSpread() {
         return new SimpleBetSpread(List.of(

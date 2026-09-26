@@ -20,6 +20,9 @@ public class IndexedRatioFunction implements MultivariateFunction {
     /**
      * Creates {@code x[numerator] / x[denominator]} over vectors with {@code dimension} entries.
      *
+     * @param numerator   index of the numerator
+     * @param denominator index of the denominator
+     * @param dimension   length of the vectors
      * @throws IndexOutOfBoundsException if either index is outside the vector
      * @throws IllegalArgumentException  if both indices are the same
      */

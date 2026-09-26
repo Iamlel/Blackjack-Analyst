@@ -8,8 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Decides which side bets to take, by name, from the true count. {@link me.lel.game.Blackjack} only asks about
- * {@code "insurance"}.
+ * Decides which side bets to take, by name, from the true count. Side bets are optional bets placed next to the main
+ * hand, such as insurance.
  */
 public class SideBetMover {
     private final static Pattern PATTERN = Pattern.compile("([A-z ]+),(-?\\d+)([+-])");
@@ -23,24 +23,42 @@ public class SideBetMover {
         this.bets = new HashMap<>();
     }
 
+    /**
+     * Creates a mover from side bets keyed by name.
+     *
+     * @param bets when to take each side bet
+     */
     public SideBetMover(Map<String, SideBet> bets) {
         this.bets = bets;
     }
 
     /**
-     * Sets when to take {@code bet}: at or above a true count of {@code count} if {@code above} is set, otherwise at
-     * or below it. Replaces any earlier setting for that bet.
+     * Sets when to take {@code bet}: at or above a true count of {@code count} if {@code above} is set, otherwise at or
+     * below it. Replaces any earlier setting for that bet.
+     *
+     * @param bet   the side bet's name
+     * @param count the true count threshold
+     * @param above {@code true} to bet at or above {@code count}, {@code false} to bet at or below it
      */
     public void add(String bet, int count, boolean above) {
         bets.put(bet, new SideBet(count, above));
     }
 
+    /**
+     * Stops taking {@code bet}.
+     *
+     * @param bet the side bet's name
+     */
     public void remove(String bet) {
         bets.remove(bet);
     }
 
     /**
      * Returns whether to take {@code bet} at this true count. Bets it doesn't know are never taken.
+     *
+     * @param bet   the side bet's name
+     * @param count current true count
+     * @return {@code true} to take the bet
      */
     public boolean valid(String bet, double count) {
         if (bets.containsKey(bet)) {
@@ -50,9 +68,11 @@ public class SideBetMover {
     }
 
     /**
-     * Reads side bets from CSV, such as the bundled {@code sidebet.csv}. The first line is a header. Each line after
-     * it is a bet name and a count with a direction, such as {@code insurance,3+}. The reader is left open.
+     * Reads side bets from CSV, such as the bundled {@code sidebet.csv}. The first line is a header. Each line after it
+     * is a bet name and a count with a direction, such as {@code insurance,3+}. The reader is left open.
      *
+     * @param br the CSV to read
+     * @return the side bet mover
      * @throws IOException if reading fails
      */
     public static SideBetMover load(BufferedReader br) throws IOException {

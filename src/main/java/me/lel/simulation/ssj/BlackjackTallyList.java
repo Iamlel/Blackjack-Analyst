@@ -35,6 +35,8 @@ public class BlackjackTallyList extends ListOfTalliesWithCovariance<Tally> {
     /**
      * Creates the list for {@code game}. Each player's current bankroll becomes their starting bankroll.
      *
+     * @param game the game to collect results from
+     * @return the new list
      * @throws IllegalArgumentException if the game doesn't report a profit and a wager for every player
      */
     public static BlackjackTallyList create(SimpleGame game) {
@@ -76,12 +78,20 @@ public class BlackjackTallyList extends ListOfTalliesWithCovariance<Tally> {
         this.everyoneDead = !game.hasLivingPlayers();
     }
 
+    /**
+     * Returns the number of players the list collects results for.
+     *
+     * @return the number of players
+     */
     public int getPlayerCount() {
         return players;
     }
 
     /**
      * Returns player {@code i}'s profit tally.
+     *
+     * @param i the player's seat index
+     * @return the profit tally
      */
     public BlackjackTally getPlayerTally(int i) {
         return (BlackjackTally) get(i);
@@ -89,6 +99,9 @@ public class BlackjackTallyList extends ListOfTalliesWithCovariance<Tally> {
 
     /**
      * Returns the tally of player {@code i}'s initial wager per round.
+     *
+     * @param i the player's seat index
+     * @return the wager tally
      */
     public Tally getWagerTally(int i) {
         return get(players + i);
@@ -96,29 +109,42 @@ public class BlackjackTallyList extends ListOfTalliesWithCovariance<Tally> {
 
     /**
      * Returns player {@code i}'s average initial wager per round, in dollars. Rounds sat out count as 0.
+     *
+     * @param i the player's seat index
+     * @return the average bet in dollars
      */
     public double getAverageBet(int i) {
         return getWagerTally(i).average();
     }
 
     /**
-     * Returns player {@code i}'s edge as a percentage: mean profit divided by mean initial wager. A positive edge
-     * means the player has the advantage.
+     * Returns player {@code i}'s edge: mean profit divided by mean initial wager. A positive edge means the player has
+     * the advantage over the house.
+     *
+     * @param i the player's seat index
+     * @return the edge as a percentage
      */
     public double getEdge(int i) {
         return edges[i].average() * 100;
     }
 
     /**
-     * Returns the half-width of a 95% confidence interval on {@link #getEdge(int)}, in percentage points.
+     * Returns the half-width of a 95% confidence interval on {@link #getEdge(int)}.
+     *
+     * @param i the player's seat index
+     * @return the margin of error in percentage points
      */
     public double getEdgeMarginOfError(int i) {
         return getEdgeMarginOfError(i, 0.95);
     }
 
     /**
-     * Same as {@link #getEdgeMarginOfError(int)} at confidence {@code level}. The interval comes from the delta
-     * method, which accounts for the covariance between profit and wager.
+     * Same as {@link #getEdgeMarginOfError(int)} at another confidence level. The interval comes from the delta method,
+     * which accounts for the covariance between profit and wager.
+     *
+     * @param i     the player's seat index
+     * @param level the confidence level, such as 0.99
+     * @return the margin of error in percentage points
      */
     public double getEdgeMarginOfError(int i, double level) {
         double[] centerAndRadius = new double[2];

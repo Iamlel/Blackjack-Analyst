@@ -36,6 +36,9 @@ import java.util.regex.Pattern;
  * {@code n} or less. Zero is strict: {@code (0+)} needs a positive count and {@code (0-)} a negative one. For example,
  * {@code YU(4+)H} splits a pair, surrenders at a true count of 4 or more, and otherwise hits. A decision the table
  * doesn't cover is a stand.
+ * <p>
+ * Moves with a count condition are index plays, also called deviations: changes to basic strategy that pay off once
+ * the true count passes a certain point.
  */
 public class DataDrivenMover implements Mover {
     /**
@@ -48,6 +51,8 @@ public class DataDrivenMover implements Mover {
     /**
      * Creates a mover from a table that is already parsed. It is keyed by the dealer's up card value (an ace is 1),
      * then by the hand's row name such as {@code "16"} or {@code "S18"}, and holds each cell's moves in order.
+     *
+     * @param table the parsed strategy table
      */
     public DataDrivenMover(Map<Integer, Map<String, List<MoverAction>>> table) {
         this.table = table;
@@ -123,6 +128,8 @@ public class DataDrivenMover implements Mover {
     /**
      * Reads a strategy table from CSV in the format described on this class. The reader is left open.
      *
+     * @param br the CSV to read
+     * @return the mover
      * @throws IOException if reading fails
      */
     public static Mover load(BufferedReader br) throws IOException {
@@ -150,6 +157,9 @@ public class DataDrivenMover implements Mover {
 
     /**
      * Parses one cell into its moves, in order.
+     *
+     * @param s the cell's text
+     * @return the cell's moves
      */
     protected static List<MoverAction> parseStrategy(String s) {
         List<MoverAction> list = new ArrayList<>();
@@ -173,6 +183,8 @@ public class DataDrivenMover implements Mover {
     /**
      * Returns the move a cell letter stands for.
      *
+     * @param letter the letter from the cell
+     * @return the move
      * @throws IllegalArgumentException if the letter isn't a known move
      */
     protected static SimpleAction getSimpleAction(char letter) {

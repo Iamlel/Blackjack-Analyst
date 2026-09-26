@@ -3,8 +3,8 @@ package me.lel.core.hand;
 import me.lel.core.Card;
 
 /**
- * A blackjack hand. It keeps the first two cards and a running total, and an ace counts as 11 whenever that doesn't
- * bust the hand.
+ * A blackjack hand. It keeps the first two cards and a running total. An ace counts as 11 unless that would take the
+ * total over 21, in which case it counts as 1. Going over 21 is a bust, which loses.
  */
 public class Hand {
     private final Card first;
@@ -15,6 +15,12 @@ public class Hand {
     private boolean initial;
     private boolean soft;
 
+    /**
+     * Creates a hand from its first two cards.
+     *
+     * @param first  the first card
+     * @param second the second card
+     */
     public Hand(Card first, Card second) {
         this.first = first;
         this.second = second;
@@ -25,10 +31,20 @@ public class Hand {
         this.initial = true;
     }
 
+    /**
+     * Returns the hand's total.
+     *
+     * @return the total, counting an ace as 11 when that doesn't bust the hand
+     */
     public int getHandValue() {
         return this.runningHandTotal;
     }
 
+    /**
+     * Adds a card to the hand. Afterwards the hand is no longer {@linkplain #isInitial() initial}.
+     *
+     * @param card the card to add
+     */
     public void addCard(Card card) {
         this.runningHandTotal += card.getValue();
 
@@ -48,29 +64,46 @@ public class Hand {
     }
 
     /**
-     * Returns whether an ace in the hand is currently counted as 11.
+     * Returns whether the hand is soft, meaning an ace in it is currently counted as 11. A soft hand can't bust on the
+     * next card, because the ace can drop back to 1.
+     *
+     * @return {@code true} if the hand is soft
      */
     public boolean isSoft() {
         return this.soft;
     }
 
     /**
-     * Returns whether the hand is 21 on its first two cards.
+     * Returns whether the hand is a blackjack: 21 on its first two cards, which takes an ace and a ten-value card.
+     *
+     * @return {@code true} if the hand is a blackjack
      */
     public boolean isBlackjack() {
         return (this.initial && this.runningHandTotal == 21);
     }
 
+    /**
+     * Returns the first card dealt to the hand.
+     *
+     * @return the first card
+     */
     public Card getFirst() {
         return this.first;
     }
 
+    /**
+     * Returns the second card dealt to the hand.
+     *
+     * @return the second card
+     */
     public Card getSecond() {
         return this.second;
     }
 
     /**
      * Returns whether the hand still has only its first two cards.
+     *
+     * @return {@code true} if no cards have been added
      */
     public boolean isInitial() {
         return this.initial;

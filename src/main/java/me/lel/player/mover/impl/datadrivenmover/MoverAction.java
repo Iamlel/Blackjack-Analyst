@@ -14,6 +14,9 @@ public record MoverAction(SimpleAction action, Integer count, boolean above) {
 
     /**
      * Returns whether the count condition fails at true count {@code tc}. See {@link Utils#pointComparison}.
+     *
+     * @param tc current true count
+     * @return {@code true} if the move doesn't apply
      */
     public boolean invalid(double tc) {
         return Utils.pointComparison(tc, count, above);

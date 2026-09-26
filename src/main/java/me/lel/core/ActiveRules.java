@@ -1,13 +1,10 @@
 package me.lel.core;
 
 /**
- * What a {@link me.lel.player.mover.Mover} is allowed to do on the decision in front of it.
- * <p>
- * The first three flags copy the table {@link Rules}. The last three are worked out for the current hand, so they
- * also depend on the player's bankroll, the splits already made this round, and whether the hand still has only its
- * first two cards.
+ * What a {@link me.lel.player.mover.Mover} is allowed to do on the decision in front of it. The first three flags are
+ * table rules, and the last three apply to the current hand.
  *
- * @param h17          the dealer hits soft 17
+ * @param h17          the dealer hits soft 17 (a 17 that counts an ace as 11)
  * @param das          doubling after a split is allowed
  * @param sas          surrendering after a split is allowed
  * @param canSurrender the hand may surrender now

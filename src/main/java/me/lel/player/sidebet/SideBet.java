@@ -12,6 +12,9 @@ import me.lel.utils.Utils;
 public record SideBet(Integer count, boolean above) {
     /**
      * Returns whether to take the bet at true count {@code tc}.
+     *
+     * @param tc current true count
+     * @return {@code true} to take the bet
      */
     public boolean valid(double tc) {
         return !Utils.pointComparison(tc, count, above);

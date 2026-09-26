@@ -22,10 +22,16 @@ import java.util.Map;
 /**
  * Standard blackjack for any number of players, one round per {@link #simulate} call.
  * <p>
- * A round shuffles if the shoe is past its penetration, takes bets and deals, offers insurance and then early
+ * Each player bets and gets two cards, and the dealer gets an up card and a face-down hole card. A player can take more
+ * cards (hit) until they stop (stand) or go over 21 (bust), which loses. The dealer then draws to 17 or more. Each hand
+ * left wins even money if it beats the dealer or the dealer busts, loses if it's lower, and pushes (gets the bet back)
+ * on a tie. A blackjack, an ace and a ten-value card as the first two cards, is paid right away at the blackjack payout
+ * unless the dealer also has one.
+ * <p>
+ * A round here shuffles if the shoe is past its penetration, takes bets and deals, offers insurance and then early
  * surrender, plays out the players' hands and the dealer's (both skipped when the dealer has blackjack), and settles.
- * Each step is a protected method, so a variant such as {@link FreeBetBlackjack} overrides only the steps that
- * differ. All money goes through {@link #pay} and {@link #take}.
+ * Each step is a protected method, so a variant such as {@link FreeBetBlackjack} overrides only the steps that differ.
+ * All money goes through {@link #pay} and {@link #take}.
  * <p>
  * Decisions use the shoe's current true count, which includes every card dealt so far, the dealer's hole card among
  * them. Splitting or doubling needs a bankroll of at least twice the hand's bet.
@@ -45,6 +51,8 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Creates a game with the default {@link Rules}, a six-deck shoe and no card counting.
+     *
+     * @param players players in seat order
      */
     public Blackjack(Player[] players) {
         this(players, new NoCountSystem(), Rules.buildDefault(), 6);
@@ -52,6 +60,9 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Creates a game with the default {@link Rules} and a six-deck shoe.
+     *
+     * @param players     players in seat order
+     * @param countSystem counting system behind the true count players see
      */
     public Blackjack(Player[] players, CountSystem countSystem) {
         this(players, countSystem, Rules.buildDefault(), 6);
@@ -59,6 +70,10 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Creates a game with a six-deck shoe.
+     *
+     * @param players     players in seat order
+     * @param countSystem counting system behind the true count players see
+     * @param rules       table rules
      */
     public Blackjack(Player[] players, CountSystem countSystem, Rules rules) {
         this(players, countSystem, rules, 6);
@@ -82,6 +97,8 @@ public class Blackjack implements SimpleGame {
     /**
      * Plays one round and records each player's profit and initial wager. Once every player is dead, it records zeros
      * without dealing.
+     *
+     * @param stream random stream for the cards dealt
      */
     @Override
     public void simulate(RandomStream stream) {
@@ -117,6 +134,9 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Returns whether {@code player} can no longer cover the table minimum and is dealt out.
+     *
+     * @param player the player to check
+     * @return {@code true} if the player is dead
      */
     protected boolean isDead(Player player) {
         return player.isDead(rules.getMinimumBet());
@@ -137,6 +157,8 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Plays one round without recording it. The class description lists the steps.
+     *
+     * @param stream random stream for the cards dealt
      */
     protected void playRound(RandomStream stream) {
         if (deck.isShuffleNecessary()) {
@@ -169,6 +191,7 @@ public class Blackjack implements SimpleGame {
      * <p>
      * This also records each player's initial wager, so an override should call it.
      *
+     * @param stream random stream for the cards dealt
      * @return whether anyone bet; if nobody did, the round ends here
      */
     protected boolean createHands(RandomStream stream) {
@@ -210,8 +233,8 @@ public class Blackjack implements SimpleGame {
     }
 
     /**
-     * Offers insurance when the dealer shows an ace and settles it right away. A player who takes it bets half of
-     * their total initial bet.
+     * Offers insurance when the dealer shows an ace and settles it right away. Insurance is a side bet that pays if the
+     * dealer has blackjack. A player who takes it bets half of their total initial bet.
      */
     protected void checkInsurance() {
         if (dealerHand.getUpCard() == Card.ACE) {
@@ -229,7 +252,8 @@ public class Blackjack implements SimpleGame {
     }
 
     /**
-     * Lets each hand give up half its bet before the dealer checks for blackjack.
+     * Offers early surrender: each hand may give up half its bet before the dealer checks for blackjack, which also
+     * saves half the bet against a dealer blackjack.
      */
     protected void checkEarlySurrender() {
         for (Player player : players) {
@@ -245,9 +269,11 @@ public class Blackjack implements SimpleGame {
     }
 
     /**
-     * Plays out every player's hands. Blackjacks are paid right away. Any other hand keeps asking its player for a
-     * move until it stands, busts, reaches 21, or doubles, splits or surrenders. See {@link Action} for what happens
-     * when a move isn't allowed.
+     * Plays out every player's hands. Blackjacks are paid right away. Any other hand keeps asking its player for a move
+     * until it stands, busts, reaches 21, or doubles, splits or surrenders. A move the rules don't allow becomes a hit,
+     * except {@link Action#DOUBLE_STAND}, which stands.
+     *
+     * @param stream random stream for the cards dealt
      */
     protected void getPlayerAction(RandomStream stream) {
         for (Player player : players) {
@@ -294,13 +320,23 @@ public class Blackjack implements SimpleGame {
         }
     }
 
+    /**
+     * Returns whether {@code hand} may surrender now.
+     *
+     * @param hand the hand to check
+     * @return {@code true} if the hand may surrender
+     */
     protected boolean canSurrender(PlayerHand hand) {
         return hand.isInitial() && rules.isLateSurrender() && (rules.isSas() || !hand.hasBeenSplit());
     }
 
     /**
-     * Returns whether {@code hand} may split now. {@code splitAces} is true when the hand itself came from splitting
-     * aces.
+     * Returns whether {@code hand} may split now.
+     *
+     * @param player    the hand's owner
+     * @param hand      the hand to check
+     * @param splitAces whether the hand itself came from splitting aces
+     * @return {@code true} if the hand may split
      */
     protected boolean canSplit(Player player, PlayerHand hand, boolean splitAces) {
         return player.has(hand.bet() * 2) &&
@@ -310,8 +346,12 @@ public class Blackjack implements SimpleGame {
     }
 
     /**
-     * Returns whether {@code hand} may double now. {@code splitAces} is true when the hand itself came from splitting
-     * aces.
+     * Returns whether {@code hand} may double now.
+     *
+     * @param player    the hand's owner
+     * @param hand      the hand to check
+     * @param splitAces whether the hand itself came from splitting aces
+     * @return {@code true} if the hand may double
      */
     protected boolean canDouble(Player player, PlayerHand hand, boolean splitAces) {
         return player.has(hand.bet() * 2) &&
@@ -321,7 +361,11 @@ public class Blackjack implements SimpleGame {
     }
 
     /**
-     * Takes half of the hand's bet and removes the hand at {@code index} from play.
+     * Takes half of the hand's bet and removes the hand from play.
+     *
+     * @param player the hand's owner
+     * @param hand   the hand surrendering
+     * @param index  the hand's position in the player's list
      */
     protected void surrenderLogic(Player player, PlayerHand hand, int index) {
         take(player, (double) hand.bet() / 2);
@@ -329,8 +373,13 @@ public class Blackjack implements SimpleGame {
     }
 
     /**
-     * Replaces the hand at {@code index} with two hands that each keep one of its cards and draw a new second card.
-     * The split counts toward {@link Rules#getSplitAmount()}.
+     * Replaces the hand at {@code index} with two hands that each keep one of its cards and draw a new second card. The
+     * split counts toward {@link Rules#getSplitAmount()} through {@link #addSplit}.
+     *
+     * @param player the hand's owner
+     * @param hand   the pair being split
+     * @param index  the hand's position in the player's list
+     * @param stream random stream for the cards dealt
      */
     protected void splitLogic(Player player, PlayerHand hand, int index, RandomStream stream) {
         hands.get(player).add(new PlayerHand(hand.bet(), hand.getFirst(), deck.takeCard(stream), true));
@@ -341,6 +390,9 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Deals the hand one more card and doubles its bet.
+     *
+     * @param hand   the hand doubling
+     * @param stream random stream for the cards dealt
      */
     protected void doubleLogic(PlayerHand hand, RandomStream stream) {
         hand.addCard(deck.takeCard(stream));
@@ -349,6 +401,8 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Draws for the dealer until the total is 17 or more, and hits soft 17 when the rules say so.
+     *
+     * @param stream random stream for the cards dealt
      */
     protected void dealerAction(RandomStream stream) {
         if (dealerHand.getHandValue() < 17 || (dealerHand.getHandValue() == 17 && dealerHand.isSoft() && rules.isH17())) {
@@ -359,7 +413,7 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Settles every hand still in play. A bust loses, a higher total or a dealer bust wins even money, a lower total
-     * loses, and a tie pushes.
+     * loses, and a tie pushes, which returns the bet.
      */
     protected void compareHands() {
         for (Player player : players) {
@@ -382,6 +436,8 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Returns the players in seat order, in a new array.
+     *
+     * @return a copy of the players array
      */
     @Override
     public Player[] getPlayers() {
@@ -390,21 +446,36 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Returns the players array itself, without the copy {@link #getPlayers()} makes.
+     *
+     * @return the players array
      */
     protected Player[] getInternalPlayers() {
         return players;
     }
 
+    /**
+     * Returns the shoe the game deals from.
+     *
+     * @return the shoe
+     */
     protected Deck getDeck() {
         return deck;
     }
 
+    /**
+     * Returns the dealer's hand for the current round.
+     *
+     * @return the dealer's hand
+     */
     protected DealerHand getDealerHand() {
         return dealerHand;
     }
 
     /**
      * Returns the list of hands {@code player} still has in play this round. Changes to the list change the round.
+     *
+     * @param player the player whose hands to get
+     * @return the player's hands
      */
     protected List<PlayerHand> getHands(Player player) {
         return hands.get(player);
@@ -412,6 +483,8 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Counts one split by {@code player} toward {@link Rules#getSplitAmount()}.
+     *
+     * @param player the player who split
      */
     protected void addSplit(Player player) {
         splitTimes.put(player, splitTimes.get(player) + 1);
@@ -419,6 +492,9 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Pays {@code amount} to {@code player}. Every win in the game goes through this method.
+     *
+     * @param player the player to pay
+     * @param amount the amount won
      */
     protected void pay(Player player, double amount) {
         player.give(amount);
@@ -426,6 +502,9 @@ public class Blackjack implements SimpleGame {
 
     /**
      * Takes {@code amount} from {@code player}. Every loss in the game goes through this method.
+     *
+     * @param player the player to charge
+     * @param amount the amount lost
      */
     protected void take(Player player, double amount) {
         player.take(amount);

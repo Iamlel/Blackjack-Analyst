@@ -25,8 +25,10 @@ public enum Card {
     }
 
     /**
-     * Returns the card's blackjack value, with an ace as 1 and face cards as 10. {@link me.lel.core.hand.Hand}
-     * decides when an ace counts as 11.
+     * Returns the card's blackjack value. Number cards are worth their number, jacks, queens and kings are worth 10,
+     * and an ace is worth 1 here. An ace can also count as 11, which {@link me.lel.core.hand.Hand} takes care of.
+     *
+     * @return the card's value, from 1 to 10
      */
     public int getValue() {
         return this.value;

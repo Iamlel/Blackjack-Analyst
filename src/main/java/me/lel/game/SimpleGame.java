@@ -12,20 +12,29 @@ import umontreal.ssj.mcqmctools.MonteCarloModelDoubleArray;
  */
 public interface SimpleGame extends MonteCarloModelDoubleArray {
     /**
-     * Returns the players in the same order as the performance vector.
+     * Returns the players, in the same order as the performance vector.
+     *
+     * @return the players
      */
     Player[] getPlayers();
 
+    /**
+     * Returns the table rules.
+     *
+     * @return the table rules
+     */
     Rules getRules();
 
     /**
-     * Returns the game to its starting state, such as an unshuffled shoe, so that a reset random stream replays the
-     * same rounds. Player bankrolls are left alone.
+     * Returns the game to its starting state, so that a reset random stream replays the same rounds. Player bankrolls
+     * are left alone.
      */
     void reset();
 
     /**
      * Returns whether any player can still cover the table minimum.
+     *
+     * @return {@code true} if at least one player is still alive
      */
     boolean hasLivingPlayers();
 }

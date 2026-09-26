@@ -4,7 +4,8 @@ import me.lel.core.Card;
 import me.lel.counting.CountSystem;
 
 /**
- * The Hi-Lo count: 2 through 6 are +1, 7 through 9 are 0, and tens and aces are -1.
+ * The Hi-Lo count, the most widely used counting system. Cards 2 through 6 count +1, 7 through 9 count 0, and tens and
+ * aces count -1.
  */
 public class HiLoCountSystem implements CountSystem {
     public int value(Card card) {

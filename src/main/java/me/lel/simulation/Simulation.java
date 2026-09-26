@@ -28,22 +28,31 @@ public class Simulation {
     private final RandomStream stream = new MRG32k3a();
     private BlackjackTallyList playerStatContainer;
 
+    /**
+     * Creates a simulation of {@code game}. The statistics start from the players' current bankrolls.
+     *
+     * @param game the game to simulate
+     */
     public Simulation(SimpleGame game) {
         this.game = game;
         this.playerStatContainer = BlackjackTallyList.create(game);
     }
 
     /**
-     * Plays and records {@code rounds} rounds. Each call starts the statistics over, while bankrolls and the shoe
-     * carry on from where the last call left them.
+     * Plays and records {@code rounds} rounds. Each call starts the statistics over, while bankrolls and the game carry
+     * on from where the last call left them.
+     *
+     * @param rounds number of rounds to play
      */
     public void run(int rounds) {
         MonteCarloExperiment.simulateRuns(game, rounds, stream, playerStatContainer);
     }
 
     /**
-     * Plays {@code rounds} rounds like {@link #run}, then opens a window charting each player's bankroll with about
-     * 500 points per player.
+     * Plays {@code rounds} rounds like {@link #run}, then opens a window charting each player's bankroll with about 500
+     * points per player.
+     *
+     * @param rounds number of rounds to play
      */
     public void runWithDisplay(int rounds) {
         Graph graph = new Graph(playerStatContainer, rounds);
@@ -52,6 +61,9 @@ public class Simulation {
 
     /**
      * Same as {@link #runWithDisplay(int)}, with a point every {@code dx} rounds.
+     *
+     * @param rounds number of rounds to play
+     * @param dx     rounds between points
      */
     public void runWithDisplay(int rounds, int dx) {
         Graph graph = new Graph(playerStatContainer, rounds);
@@ -62,6 +74,9 @@ public class Simulation {
     /**
      * Same as {@link #runWithDisplay(int)}, with a graph you set up yourself. The graph has to be built on
      * {@link #getPlayerStatContainer()}, and it stops recording once its window opens.
+     *
+     * @param rounds number of rounds to play
+     * @param graph  the graph to record into and display
      */
     public void runWithDisplay(int rounds, Graph graph) {
         this.run(rounds);
@@ -71,6 +86,8 @@ public class Simulation {
 
     /**
      * Returns {@link #getResults(int, int)} for the first player, without hourly EV.
+     *
+     * @return the first player's report
      */
     public String getFirstResults() {
         return getResults(0, 0);
@@ -78,6 +95,9 @@ public class Simulation {
 
     /**
      * Returns {@link #getResults(int, int)} for the first player.
+     *
+     * @param roundsPerHour rounds per hour, used to add EV per hour; 0 leaves it out
+     * @return the first player's report
      */
     public String getFirstResults(int roundsPerHour) {
         return getResults(0, roundsPerHour);
@@ -85,6 +105,9 @@ public class Simulation {
 
     /**
      * Returns {@link #getResults(int, int)} without hourly EV.
+     *
+     * @param i the player's seat index
+     * @return player {@code i}'s report
      */
     public String getResults(int i) {
         return getResults(i, 0);
@@ -169,8 +192,8 @@ public class Simulation {
     }
 
     /**
-     * Moves the random stream back to its start. That alone doesn't replay earlier rounds, because the shoe keeps its
-     * current order. Use {@link #reset()} to replay.
+     * Moves the random stream back to its start. That alone doesn't replay earlier rounds, because the game keeps its
+     * current state. Use {@link #reset()} to replay.
      */
     public void resetRandom() {
         stream.resetStartStream();
@@ -185,24 +208,48 @@ public class Simulation {
 
     /**
      * Returns the tallies behind the statistics, for example to build a {@link Graph}. {@link #resetStatistics()}
-     * replaces it with a new one.
+     * replaces them with new ones.
+     *
+     * @return the current tallies
      */
     public BlackjackTallyList getPlayerStatContainer() {
         return playerStatContainer;
     }
 
+    /**
+     * Returns the first player's statistics.
+     *
+     * @return the first player's tally
+     */
     public BlackjackTally getFirstStats() {
         return playerStatContainer.getPlayerTally(0);
     }
 
+    /**
+     * Returns player {@code i}'s statistics.
+     *
+     * @param i the player's seat index
+     * @return player {@code i}'s tally
+     */
     public BlackjackTally getStats(int i) {
         return playerStatContainer.getPlayerTally(i);
     }
 
+    /**
+     * Returns the first player.
+     *
+     * @return the player in seat 0
+     */
     public Player getFirstPlayer() {
         return game.getPlayers()[0];
     }
 
+    /**
+     * Returns player {@code i}.
+     *
+     * @param i the player's seat index
+     * @return the player in seat {@code i}
+     */
     public Player getPlayer(int i) {
         return game.getPlayers()[i];
     }

@@ -5,8 +5,9 @@ import me.lel.core.action.Action;
 import me.lel.player.mover.Mover;
 
 /**
- * Basic strategy for a multi-deck shoe where the dealer hits soft 17, written out in code. It assumes doubling after a
- * split is allowed, ignores the count and never surrenders early.
+ * Basic strategy for a multi-deck shoe where the dealer hits soft 17, written out in code. Basic strategy is the best
+ * play for each hand against each dealer up card when you don't count cards. This one assumes doubling after a split is
+ * allowed, ignores the count and never surrenders early.
  */
 public class H17BasicMover implements Mover {
 

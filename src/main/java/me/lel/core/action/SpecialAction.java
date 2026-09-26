@@ -2,7 +2,6 @@ package me.lel.core.action;
 
 /**
  * Strategy table entries whose meaning depends on the rules.
- * {@link me.lel.player.mover.impl.datadrivenmover.DataDrivenMover} resolves them when it picks a move.
  */
 public enum SpecialAction implements SimpleAction {
     /**
@@ -10,7 +9,7 @@ public enum SpecialAction implements SimpleAction {
      */
     SPLIT_DAS,
     /**
-     * Surrender before the dealer checks for blackjack.
+     * Surrender before the dealer checks for blackjack, which also saves half the bet against a dealer blackjack.
      */
     EARLY_SURRENDER
 }

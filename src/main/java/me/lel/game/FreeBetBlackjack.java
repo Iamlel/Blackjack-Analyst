@@ -10,25 +10,52 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Free Bet Blackjack. The house puts up the extra bet on doubles of hard 9, 10 and 11 and on splits of any pair except
- * tens, and a free bet can win but is never lost. In exchange, the dealer pushes on 22 instead of busting.
+ * Free Bet Blackjack. The house pays for the extra bet on doubles of hard 9, 10 and 11 (totals with no ace counted as
+ * 11) and on splits of any pair except tens. A free bet wins like a normal one but is never lost. In exchange, when the
+ * dealer ends on 22, every hand that didn't bust pushes instead of winning.
  */
 public class FreeBetBlackjack extends Blackjack {
     private final Set<PlayerHand> freeHands = new HashSet<>();
     private final Set<PlayerHand> freeDoubles = new HashSet<>();
 
+    /**
+     * Creates a game with the default {@link Rules}, a six-deck shoe and no card counting.
+     *
+     * @param players players in seat order
+     */
     public FreeBetBlackjack(Player[] players) {
         super(players);
     }
 
+    /**
+     * Creates a game with the default {@link Rules} and a six-deck shoe.
+     *
+     * @param players     players in seat order
+     * @param countSystem counting system behind the true count players see
+     */
     public FreeBetBlackjack(Player[] players, CountSystem countSystem) {
         super(players, countSystem);
     }
 
+    /**
+     * Creates a game with a six-deck shoe.
+     *
+     * @param players     players in seat order
+     * @param countSystem counting system behind the true count players see
+     * @param rules       table rules
+     */
     public FreeBetBlackjack(Player[] players, CountSystem countSystem, Rules rules) {
         super(players, countSystem, rules);
     }
 
+    /**
+     * Creates a game.
+     *
+     * @param players     players in seat order
+     * @param countSystem counting system behind the true count players see
+     * @param rules       table rules
+     * @param decks       number of decks in the shoe
+     */
     public FreeBetBlackjack(Player[] players, CountSystem countSystem, Rules rules, int decks) {
         super(players, countSystem, rules, decks);
     }
@@ -41,8 +68,11 @@ public class FreeBetBlackjack extends Blackjack {
     }
 
     /**
-     * Doubles like {@link Blackjack}, but a double on 9, 10 or 11 is free: if the hand loses, only the original bet
-     * is lost.
+     * Doubles like {@link Blackjack}, but a double on 9, 10 or 11 is free: if the hand loses, only the original bet is
+     * lost.
+     *
+     * @param hand   the hand doubling
+     * @param stream random stream for the cards dealt
      */
     @Override
     protected void doubleLogic(PlayerHand hand, RandomStream stream) {
@@ -58,6 +88,11 @@ public class FreeBetBlackjack extends Blackjack {
     /**
      * Splits like {@link Blackjack}, and for free unless the pair is ten-valued. The second new hand is free, and the
      * first one is too when the hand being split was already free.
+     *
+     * @param player the hand's owner
+     * @param hand   the pair being split
+     * @param index  the hand's position in the player's list
+     * @param stream random stream for the cards dealt
      */
     @Override
     protected void splitLogic(Player player, PlayerHand hand, int index, RandomStream stream) {

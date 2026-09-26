@@ -2,15 +2,15 @@ package me.lel.utils;
 
 public class Utils {
     /**
-     * Checks a true count against a threshold and returns {@code true} when the condition <em>fails</em>.
+     * Returns {@code true} when {@code x} fails a comparison against the point {@code y}.
      * <p>
-     * With {@code above} set, the condition is {@code x >= y}, and otherwise it is {@code x <= y}. A threshold of 0 is
-     * strict, so the condition becomes {@code x > 0} or {@code x < 0}. A {@code null} threshold always passes.
+     * With {@code above} set, {@code x} has to be at or above {@code y}, and otherwise at or below it. A point of 0 is
+     * strict, so {@code x} has to be above or below 0, never exactly 0. A {@code null} point accepts every {@code x}.
      *
-     * @param x     the true count
-     * @param y     the threshold, or {@code null} for no condition
-     * @param above {@code true} for at or above the threshold, {@code false} for at or below it
-     * @return {@code true} if the condition fails
+     * @param x     the value to compare
+     * @param y     the point, or {@code null} for no comparison
+     * @param above {@code true} to require {@code x} at or above {@code y}, {@code false} to require it at or below
+     * @return {@code true} if {@code x} fails the comparison
      */
     public static boolean pointComparison(double x, Integer y, boolean above) {
         if (y == null) {

@@ -10,8 +10,7 @@ public interface Mover {
     /**
      * Picks the next move for a hand.
      * <p>
-     * The hand is described only by its total, so a pair is recognized through {@link ActiveRules#canSplit()}. See
-     * {@link Action} for what happens when the move isn't allowed.
+     * The hand is described only by its total, so a pair is recognized through {@link ActiveRules#canSplit()}.
      *
      * @param hand       the hand's total
      * @param dealerHand the dealer's up card value, with an ace as 1
@@ -23,8 +22,7 @@ public interface Mover {
     Action action(int hand, int dealerHand, boolean soft, ActiveRules rules, double trueCount);
 
     /**
-     * Returns whether to surrender a hand before the dealer checks for blackjack. Only asked when the rules allow
-     * early surrender.
+     * Returns whether to surrender a hand before the dealer checks for blackjack, giving up half the bet.
      *
      * @param hand       the hand's total
      * @param dealerHand the dealer's up card value, with an ace as 1

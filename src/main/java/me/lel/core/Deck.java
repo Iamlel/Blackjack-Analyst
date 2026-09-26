@@ -6,10 +6,11 @@ import umontreal.ssj.rng.RandomStream;
 import java.util.*;
 
 /**
- * A shoe of one or more 52-card decks that keeps a running count as cards are dealt.
+ * A shoe: one or more 52-card decks shuffled together and dealt from the top. It keeps a running count as cards are
+ * dealt, which card counters use to judge whether the cards left favor the player.
  * <p>
- * All randomness comes from the SSJ {@link RandomStream} passed in to deal and shuffle, so the same stream and the
- * same starting order always produce the same cards.
+ * All randomness comes from the SSJ {@link RandomStream} passed in to deal and shuffle, so the same stream and the same
+ * starting order always produce the same cards.
  */
 public class Deck {
     private final Card[] deck;
@@ -55,8 +56,8 @@ public class Deck {
     /**
      * Shuffles every card back into the shoe and resets the running count.
      * <p>
-     * Call it between rounds when possible. Shuffling mid-round also puts the cards still on the table back into
-     * the shoe, so they can be dealt again.
+     * Call it between rounds when possible. Shuffling mid-round also puts the cards still on the table back into the
+     * shoe, so they can be dealt again.
      *
      * @param stream random stream the shuffle draws from
      */
@@ -72,11 +73,11 @@ public class Deck {
     }
 
     /**
-     * Returns every card to its unshuffled starting order and resets the running count. Afterwards the shoe counts
-     * as empty and is shuffled before the next card is dealt.
+     * Returns every card to its unshuffled starting order and resets the running count. Afterwards the shoe counts as
+     * empty and is shuffled before the next card is dealt.
      * <p>
-     * A shuffle rearranges whatever order the shoe is already in, so replaying a simulation needs this as well as a
-     * reset of the random stream.
+     * A shuffle rearranges whatever order the shoe is already in, so the same stream only deals the same cards again
+     * after a reset.
      */
     public final void reset() {
         for (int d = 0; d < deck.length / 13; d++) {
@@ -89,18 +90,28 @@ public class Deck {
 
     /**
      * Returns whether the shoe has been dealt past its penetration and should be shuffled before the next round.
+     *
+     * @return {@code true} once the shoe has been dealt past its penetration
      */
     public boolean isShuffleNecessary() {
         return (this.deck.length - this.topIndex <= this.lastCard);
     }
 
+    /**
+     * Returns the running count: the total of the count system's values for every card dealt since the last shuffle.
+     *
+     * @return the running count
+     */
     public int getRunningCount() {
         return this.runningCount;
     }
 
     /**
-     * Returns the running count divided by the decks left in the shoe. Partial decks count as fractions, with no
-     * rounding.
+     * Returns the true count: the running count divided by the decks left in the shoe. Partial decks count as
+     * fractions, with no rounding. Dividing by the decks left makes the count mean the same thing early and late in the
+     * shoe, so counters bet and play by it.
+     *
+     * @return the true count
      */
     public double getTrueCount() {
         return (double) this.runningCount / ((this.deck.length - this.topIndex) / 52.0);
