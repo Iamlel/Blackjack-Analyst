@@ -26,10 +26,9 @@ public class Main {
 
         Blackjack bj = new Blackjack(new Player[]{player}, new HiLoCountSystem(), rules, 6);
 
-        Simulation test = new Simulation(bj, 10, true);
-        test.run(1_000_000);
-        test.view(0, 100);
-        test.display();
+        Simulation test = new Simulation(bj);
+        test.runWithDisplay(50_000_000);
+        System.out.println(test.getResults(0, 100));
     }
 
     public static BufferedReader getReader(String name) {

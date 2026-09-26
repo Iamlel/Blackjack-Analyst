@@ -4,8 +4,10 @@ import me.lel.core.Rules;
 import me.lel.core.hand.PlayerHand;
 import me.lel.counting.CountSystem;
 import me.lel.player.Player;
+import umontreal.ssj.rng.RandomStream;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FreeBetBlackjack extends Blackjack {
     private final Set<PlayerHand> freeHands = new HashSet<>();
@@ -28,20 +30,27 @@ public class FreeBetBlackjack extends Blackjack {
     }
 
     @Override
-    protected void doubleLogic(PlayerHand hand) {
+    protected boolean createHands(RandomStream stream) {
+        freeHands.clear();
+        freeDoubles.clear();
+        return super.createHands(stream);
+    }
+
+    @Override
+    protected void doubleLogic(PlayerHand hand, RandomStream stream) {
         int h = hand.getHandValue();
         if (h == 9 || h == 10 || h == 11) {
             freeDoubles.add(hand);
         }
 
-        hand.addCard(super.getDeck().takeCard());
+        hand.addCard(super.getDeck().takeCard(stream));
         hand.doubleBet();
     }
 
     @Override
-    protected void splitLogic(Player player, PlayerHand hand, int index) {
-        PlayerHand hand1 = new PlayerHand(hand.bet(), hand.getFirst(), super.getDeck().takeCard(), true);
-        PlayerHand hand2 = new PlayerHand(hand.bet(), hand.getSecond(), super.getDeck().takeCard(), true);
+    protected void splitLogic(Player player, PlayerHand hand, int index, RandomStream stream) {
+        PlayerHand hand1 = new PlayerHand(hand.bet(), hand.getFirst(), super.getDeck().takeCard(stream), true);
+        PlayerHand hand2 = new PlayerHand(hand.bet(), hand.getSecond(), super.getDeck().takeCard(stream), true);
 
         if (hand.getFirst().getValue() != 10) {
             if (freeHands.contains(hand)) {
@@ -64,7 +73,7 @@ public class FreeBetBlackjack extends Blackjack {
             return;
         }
 
-        for (Player player : super.getPlayers()) {
+        for (Player player : super.getInternalPlayers()) {
             for (PlayerHand hand : super.getHands(player)) {
                 if (hand.getHandValue() > 21) {
                     take(player, freeDoubles.contains(hand) ? (double) hand.bet() / 2 : hand.bet(), freeHands.contains(hand));

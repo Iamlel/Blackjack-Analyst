@@ -1,21 +1,33 @@
 package me.lel.game;
 
-import me.lel.core.*;
+import me.lel.core.ActiveRules;
+import me.lel.core.Card;
+import me.lel.core.Deck;
+import me.lel.core.Rules;
 import me.lel.core.action.Action;
 import me.lel.core.hand.DealerHand;
+import me.lel.core.hand.PlayerHand;
 import me.lel.counting.CountSystem;
 import me.lel.counting.impl.NoCountSystem;
 import me.lel.player.Player;
-import me.lel.core.hand.PlayerHand;
+import umontreal.ssj.rng.RandomStream;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class Blackjack implements Game {
+public class Blackjack implements SimpleGame {
     private final Rules rules;
     private final Player[] players;
 
     private final Deck deck;
     private DealerHand dealerHand;
+
+    // [profit of each player, initial amount wagered by each player] for the last round
+    private final double[] performance;
 
     private Map<Player, List<PlayerHand>> hands;
     private Map<Player, Integer> splitTimes;
@@ -36,15 +48,61 @@ public class Blackjack implements Game {
         this.players = players;
         this.rules = rules;
         this.deck = new Deck(decks, countSystem, rules.getPenetration());
+        this.performance = new double[2 * players.length];
     }
 
     @Override
-    public void play() {
+    public void simulate(RandomStream stream) {
+        if (hasLivingPlayers()) {
+            for (int i = 0; i < players.length; i++) {
+                performance[i] = -players[i].getBankroll();
+            }
+
+            playRound(stream);
+
+            for (int i = 0; i < players.length; i++) {
+                performance[i] += players[i].getBankroll();
+            }
+        } else {
+            Arrays.fill(performance, 0);
+        }
+    }
+
+    @Override
+    public double[] getPerformance() {
+        return performance;
+    }
+
+    @Override
+    public boolean hasLivingPlayers() {
+        for (Player player : players) {
+            if (!isDead(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected boolean isDead(Player player) {
+        return player.isDead(rules.getMinimumBet());
+    }
+
+    @Override
+    public int getPerformanceDim() {
+        return performance.length;
+    }
+
+    @Override
+    public void reset() {
+        deck.reset();
+    }
+
+    protected void playRound(RandomStream stream) {
         if (deck.isShuffleNecessary()) {
-            deck.shuffleDeck();
+            deck.shuffleDeck(stream);
         }
 
-        if (!createHands()) {
+        if (!createHands(stream)) {
             return;
         }
 
@@ -57,19 +115,28 @@ public class Blackjack implements Game {
         }
 
         if (!dealerHand.isBlackjack()) {
-            getPlayerAction();
-            dealerAction();
+            getPlayerAction(stream);
+            dealerAction(stream);
         }
 
         compareHands();
     }
 
-    protected boolean createHands() {
+    protected boolean createHands(RandomStream stream) {
         this.hands = new HashMap<>();
         this.splitTimes = new HashMap<>();
         int totalHandCounter = 0;
-        for (Player p : players) {
+        for (int i = 0; i < players.length; i++) {
+            Player p = players[i];
             List<PlayerHand> playerHands = new ArrayList<>();
+            this.hands.put(p, playerHands);
+            this.splitTimes.put(p, 0);
+            // cleared every round, so sitting out or being dead records 0 instead of the last bet
+            performance[players.length + i] = 0;
+
+            if (isDead(p)) {
+                continue;
+            }
 
             int handCounter = 0;
             int betAmount = 0;
@@ -83,14 +150,13 @@ public class Blackjack implements Game {
                     break;
                 }
 
-                playerHands.add(new PlayerHand(bet, deck.takeCard(), deck.takeCard()));
+                playerHands.add(new PlayerHand(bet, deck.takeCard(stream), deck.takeCard(stream)));
+                performance[players.length + i] = betAmount;
                 handCounter++;
             }
             totalHandCounter += handCounter;
-            this.hands.put(p, playerHands);
-            this.splitTimes.put(p, 0);
         }
-        this.dealerHand = new DealerHand(deck.takeCard(), deck.takeCard());
+        this.dealerHand = new DealerHand(deck.takeCard(stream), deck.takeCard(stream));
         return (totalHandCounter > 0);
     }
 
@@ -122,7 +188,7 @@ public class Blackjack implements Game {
         }
     }
 
-    protected void getPlayerAction() {
+    protected void getPlayerAction(RandomStream stream) {
         for (Player player : players) {
             for (int i = 0; i < hands.get(player).size(); i++) {
                 PlayerHand hand = hands.get(player).get(i);
@@ -145,12 +211,12 @@ public class Blackjack implements Game {
                         break;
 
                     } else if (playerAction == Action.SPLIT && activeRules.canSplit()) {
-                        splitLogic(player, hand, i);
+                        splitLogic(player, hand, i, stream);
                         i--;
                         break;
 
                     } else if ((playerAction == Action.DOUBLE || playerAction == Action.DOUBLE_STAND) && activeRules.canDouble()) {
-                        doubleLogic(hand);
+                        doubleLogic(hand, stream);
                         break;
 
                     } else if (playerAction == Action.STAND || playerAction == Action.DOUBLE_STAND) {
@@ -158,7 +224,7 @@ public class Blackjack implements Game {
                     }
 
                     if (!splitAces || rules.isHitSplitAces()) {
-                        hand.addCard(deck.takeCard());
+                        hand.addCard(deck.takeCard(stream));
                     } else {
                         break;
                     }
@@ -190,22 +256,22 @@ public class Blackjack implements Game {
         hands.get(player).remove(index);
     }
 
-    protected void splitLogic(Player player, PlayerHand hand, int index) {
-        hands.get(player).add(new PlayerHand(hand.bet(), hand.getFirst(), deck.takeCard(), true));
-        hands.get(player).add(new PlayerHand(hand.bet(), hand.getSecond(), deck.takeCard(), true));
+    protected void splitLogic(Player player, PlayerHand hand, int index, RandomStream stream) {
+        hands.get(player).add(new PlayerHand(hand.bet(), hand.getFirst(), deck.takeCard(stream), true));
+        hands.get(player).add(new PlayerHand(hand.bet(), hand.getSecond(), deck.takeCard(stream), true));
         hands.get(player).remove(index);
         addSplit(player);
     }
 
-    protected void doubleLogic(PlayerHand hand) {
-        hand.addCard(deck.takeCard());
+    protected void doubleLogic(PlayerHand hand, RandomStream stream) {
+        hand.addCard(deck.takeCard(stream));
         hand.doubleBet();
     }
 
-    protected void dealerAction() {
+    protected void dealerAction(RandomStream stream) {
         if (dealerHand.getHandValue() < 17 || (dealerHand.getHandValue() == 17 && dealerHand.isSoft() && rules.isH17())) {
-            dealerHand.addCard(deck.takeCard());
-            dealerAction();
+            dealerHand.addCard(deck.takeCard(stream));
+            dealerAction(stream);
         }
     }
 
@@ -230,6 +296,10 @@ public class Blackjack implements Game {
 
     @Override
     public Player[] getPlayers() {
+        return players.clone();
+    }
+
+    protected Player[] getInternalPlayers() {
         return players;
     }
 

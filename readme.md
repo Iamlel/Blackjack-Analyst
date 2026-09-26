@@ -1,5 +1,5 @@
 # Blackjack Analyst
-A highly-extensible and effective blackjack simulator app written in Java. It allows you to simulate millions of hands very quickly with adjustable betting, strategies, and side bets; and review statistics from the simulations. Since it is in Java, it is incredibly easy to add new side bets, new versions of blackjack, or really just modify anything about the analyst.
+A highly-extensible and effective blackjack simulator app written in Java. It allows you to simulate millions of rounds very quickly with adjustable betting, strategies, and side bets; and review statistics from the simulations. Since it is in Java, it is incredibly easy to add new side bets, new versions of blackjack, or really just modify anything about the analyst.
 
 ## Running
 Currently, the code can be run by modifying the main file. The app acts more as a library.
@@ -30,7 +30,7 @@ A sample better is provided through <b>[samplebet.csv](./src/main/resources/samp
 This is the same for the mover and the side bet mover. I have samples of all of these, and more can be added by implementing their respective interfaces or through the loader and csv files.
 
 #### Simulation
-I created a `Simulation()` class that can help run simulations of the `Game()` interface. `Blackjack()` can be played by itself, but `Simulation()` makes it easier to run many interactions and track statistics.
+I created a `Simulation()` class that can help run simulations of the `SimpleGame()` interface. `Blackjack()` can be played by itself, but `Simulation()` makes it easier to run many rounds and track statistics. Everything is counted in rounds, not hands: one round is one observation no matter how many hands a player plays in it (or if they sit it out). Players who can no longer cover the table minimum are dealt out, and once every player is dead the remaining rounds are not recorded.
 
 ![Image of statistics](./images/statistics.png)
 

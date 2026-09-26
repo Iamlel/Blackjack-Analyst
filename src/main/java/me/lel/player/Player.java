@@ -10,6 +10,7 @@ import me.lel.player.sidebet.SideBetMover;
 import java.util.Arrays;
 
 public class Player {
+    private final double startingBankroll;
     private double bankroll;
 
     private final Mover mover;
@@ -17,6 +18,7 @@ public class Player {
     private final SideBetMover sideBet;
 
     public Player(double bankroll, Mover mover, Better better, SideBetMover sideBet) {
+        this.startingBankroll = bankroll;
         this.bankroll = bankroll;
         this.mover = mover;
         this.better = better;
@@ -55,8 +57,17 @@ public class Player {
         this.bankroll -= amount;
     }
 
+    public void resetBankroll() {
+        this.bankroll = startingBankroll;
+    }
+
     public boolean has(double amount) {
         return (bankroll >= amount);
+    }
+
+    // a dead player cannot cover the table minimum anymore
+    public boolean isDead(int minimumBet) {
+        return !has(minimumBet);
     }
 
     public double getBankroll() {
