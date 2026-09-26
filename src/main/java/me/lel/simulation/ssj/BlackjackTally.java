@@ -2,7 +2,12 @@ package me.lel.simulation.ssj;
 
 import umontreal.ssj.stat.Tally;
 
-// Make a different Tally that has order included so we can have drawdown in that and put that in the Simulation lib that you make
+/**
+ * An SSJ {@link Tally} of one player's profit per round, in dollars, with blackjack statistics on top.
+ * <p>
+ * It also tracks the maximum drawdown, which depends on the order of the observations, so add rounds in the order
+ * they were played.
+ */
 public class BlackjackTally extends Tally {
     private final int bettingUnit;
     private final double startingBankroll;
@@ -12,12 +17,19 @@ public class BlackjackTally extends Tally {
     private double peakProfit;
     private double maxDrawdown;
 
+    /**
+     * Creates a tally for a player betting in units of {@code bettingUnit} dollars (normally the table minimum) and
+     * starting with {@code startingBankroll}.
+     */
     public BlackjackTally(int bettingUnit, double startingBankroll) {
         this.bettingUnit = bettingUnit;
         this.startingBankroll = startingBankroll;
         super();
     }
 
+    /**
+     * Same as {@link #BlackjackTally(int, double)}, with a name for SSJ reports.
+     */
     public BlackjackTally(String name, int bettingUnit, double startingBankroll) {
         this.bettingUnit = bettingUnit;
         this.startingBankroll = startingBankroll;
@@ -44,64 +56,108 @@ public class BlackjackTally extends Tally {
         this.maxDrawdown = Math.max(maxDrawdown, peakProfit - profit);
     }
 
-    // $ per round
+    /**
+     * Returns the mean profit per round, in dollars.
+     */
     public double getEV() {
         return this.average();
     }
 
+    /**
+     * Returns the mean profit per round, in betting units.
+     */
     public double getUnitEV() {
         return this.average() / bettingUnit;
     }
 
+    /**
+     * Returns the standard deviation of profit per round, in betting units. SSJ's {@link #standardDeviation()} gives
+     * it in dollars.
+     */
     public double getStandardDeviation() {
         return this.standardDeviation() / bettingUnit;
     }
 
+    /**
+     * Returns the variance of profit per round, in squared betting units. SSJ's {@link #variance()} gives it in
+     * squared dollars.
+     */
     public double getVariance() {
         return this.variance() / (bettingUnit * bettingUnit);
     }
 
+    /**
+     * Returns the half-width of a 95% Student-t confidence interval on {@link #getEV()}, in dollars.
+     */
     public double getMarginOfError() {
         return this.getMarginOfError(0.95);
     }
 
+    /**
+     * Same as {@link #getMarginOfError()} at confidence {@code level}, such as 0.99.
+     */
     public double getMarginOfError(double level) {
         double[] centerAndRadius = new double[2];
         this.confidenceIntervalStudent(level, centerAndRadius);
         return centerAndRadius[1];
     }
 
-    // risk of ruin in percent
+    /**
+     * Returns {@link #getROR(double)} for the starting bankroll. That bankroll is 0 for a
+     * {@link me.lel.player.FakePlayer}, so pass a real one to {@link #getROR(double)} instead.
+     */
     public double getROR() {
         return this.getROR(startingBankroll);
     }
 
-    // risk of ruin in percent
+    /**
+     * Returns the risk of ruin as a percentage: the chance that a player starting with {@code startingBankroll}
+     * dollars goes broke if they keep playing forever at this EV and variance. It uses the approximation
+     * {@code exp(-2 * EV * bankroll / variance)}.
+     */
     public double getROR(double startingBankroll) {
         return Math.min(1, Math.exp(-2 * this.average() * startingBankroll / this.variance())) * 100;
     }
 
+    /**
+     * Returns the number of rounds recorded.
+     */
     public int getN() {
         return this.numberObs();
     }
 
+    /**
+     * Returns EV divided by standard deviation, per round.
+     */
     public double getSharpeRatio() {
         return this.getUnitEV() / this.getStandardDeviation();
     }
 
+    /**
+     * Returns N0, the number of rounds it takes for total EV to equal one standard deviation of total results.
+     */
     public double getNZero() {
         return this.getVariance() / (this.getUnitEV() * this.getUnitEV());
     }
 
+    /**
+     * Returns SCORE (standardized comparison of risk and expectation): the expected profit in dollars per 100 rounds
+     * for a $10,000 bankroll betting full Kelly.
+     */
     public double getSCORE() {
         return 1_000_000 * getSharpeRatio() * getSharpeRatio();
     }
 
-    // largest drop in $ from a bankroll high to a later low
+    /**
+     * Returns the largest drop, in dollars, from a bankroll high to a later low.
+     */
     public double getMaxDrawdown() {
         return maxDrawdown;
     }
 
+    /**
+     * Returns {@link #getMaxDrawdown()} in betting units.
+     */
     public double getUnitMaxDrawdown() {
         return maxDrawdown / bettingUnit;
     }

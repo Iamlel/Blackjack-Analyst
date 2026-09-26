@@ -9,6 +9,10 @@ import umontreal.ssj.rng.RandomStream;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Free Bet Blackjack. The house puts up the extra bet on doubles of hard 9, 10 and 11 and on splits of any pair except
+ * tens, and a free bet can win but is never lost. In exchange, the dealer pushes on 22 instead of busting.
+ */
 public class FreeBetBlackjack extends Blackjack {
     private final Set<PlayerHand> freeHands = new HashSet<>();
     private final Set<PlayerHand> freeDoubles = new HashSet<>();
@@ -36,6 +40,10 @@ public class FreeBetBlackjack extends Blackjack {
         return super.createHands(stream);
     }
 
+    /**
+     * Doubles like {@link Blackjack}, but a double on 9, 10 or 11 is free: if the hand loses, only the original bet
+     * is lost.
+     */
     @Override
     protected void doubleLogic(PlayerHand hand, RandomStream stream) {
         int h = hand.getHandValue();
@@ -47,6 +55,10 @@ public class FreeBetBlackjack extends Blackjack {
         hand.doubleBet();
     }
 
+    /**
+     * Splits like {@link Blackjack}, and for free unless the pair is ten-valued. The second new hand is free, and the
+     * first one is too when the hand being split was already free.
+     */
     @Override
     protected void splitLogic(Player player, PlayerHand hand, int index, RandomStream stream) {
         PlayerHand hand1 = new PlayerHand(hand.bet(), hand.getFirst(), super.getDeck().takeCard(stream), true);
@@ -67,6 +79,10 @@ public class FreeBetBlackjack extends Blackjack {
         super.addSplit(player);
     }
 
+    /**
+     * Settles like {@link Blackjack}, except that a dealer 22 pushes, a free hand never loses, and a hand that lost
+     * after a free double loses only its original bet.
+     */
     @Override
     protected void compareHands() {
         if (super.getDealerHand().getHandValue() == 22) {

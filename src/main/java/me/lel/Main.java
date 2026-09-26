@@ -15,6 +15,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Objects;
 
+/**
+ * An example simulation built from the sample strategy files in {@code src/main/resources}. Edit {@code main} to try
+ * other rules, players or strategies.
+ */
 public class Main {
 
     static void main(String[] args) throws IOException {
@@ -31,6 +35,11 @@ public class Main {
         System.out.println(test.getResults(0, 100));
     }
 
+    /**
+     * Opens a classpath resource, such as one of the sample CSV files.
+     *
+     * @throws NullPointerException if there is no resource called {@code name}
+     */
     public static BufferedReader getReader(String name) {
         return new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream(name))));
     }

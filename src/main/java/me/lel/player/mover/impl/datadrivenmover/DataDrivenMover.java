@@ -12,11 +12,43 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A {@link Mover} that looks up each decision in a strategy table, usually loaded from CSV with {@link #load}. The
+ * bundled {@code H17Basic.csv} and {@code H17Deviations.csv} are examples.
+ * <p>
+ * The header row is {@code Hand} followed by the dealer up cards, {@code 2} to {@code 10} and then {@code A}. Each
+ * other row starts with a hand total, prefixed with {@code S} when soft, such as {@code 16} or {@code S18}. Pairs
+ * share the row of their total, so 8,8 is on row {@code 16} and A,A on row {@code S12}. The split moves in those rows
+ * only apply when the hand can split, so other hands with that total skip them.
+ * <p>
+ * A cell lists moves from left to right:
+ * <ul>
+ *   <li>{@code E} surrender early (only read when it is the first move in the cell)</li>
+ *   <li>{@code U} surrender</li>
+ *   <li>{@code Y} split</li>
+ *   <li>{@code /} split if doubling after a split is allowed</li>
+ *   <li>{@code D} double, or hit if doubling isn't allowed; {@code DS} stands instead of hitting</li>
+ *   <li>{@code H} hit</li>
+ *   <li>{@code S} stand</li>
+ * </ul>
+ * The first move whose count condition holds is used, but surrender and split moves are skipped when the hand can't
+ * make them. A move followed by {@code (n+)} only applies at a true count of {@code n} or more, and {@code (n-)} at
+ * {@code n} or less. Zero is strict: {@code (0+)} needs a positive count and {@code (0-)} a negative one. For example,
+ * {@code YU(4+)H} splits a pair, surrenders at a true count of 4 or more, and otherwise hits. A decision the table
+ * doesn't cover is a stand.
+ */
 public class DataDrivenMover implements Mover {
+    /**
+     * Matches one move in a cell: its letter, then an optional count condition such as {@code (3+)}.
+     */
     protected static final Pattern PATTERN = Pattern.compile("([EUYN/DHS])(?:\\((-?\\d+)([+-])\\))?");
 
     private final Map<Integer, Map<String, List<MoverAction>>> table;
 
+    /**
+     * Creates a mover from a table that is already parsed. It is keyed by the dealer's up card value (an ace is 1),
+     * then by the hand's row name such as {@code "16"} or {@code "S18"}, and holds each cell's moves in order.
+     */
     public DataDrivenMover(Map<Integer, Map<String, List<MoverAction>>> table) {
         this.table = table;
     }
@@ -88,6 +120,11 @@ public class DataDrivenMover implements Mover {
         return (action.action() == SpecialAction.EARLY_SURRENDER);
     }
 
+    /**
+     * Reads a strategy table from CSV in the format described on this class. The reader is left open.
+     *
+     * @throws IOException if reading fails
+     */
     public static Mover load(BufferedReader br) throws IOException {
         Map<Integer, Map<String, List<MoverAction>>> table = new HashMap<>();
 
@@ -111,10 +148,12 @@ public class DataDrivenMover implements Mover {
         return new DataDrivenMover(table);
     }
 
+    /**
+     * Parses one cell into its moves, in order.
+     */
     protected static List<MoverAction> parseStrategy(String s) {
         List<MoverAction> list = new ArrayList<>();
 
-        // regex: letter followed by optional (number+/-)
         Matcher matcher = PATTERN.matcher(s);
 
         while (matcher.find()) {
@@ -131,6 +170,11 @@ public class DataDrivenMover implements Mover {
         return list;
     }
 
+    /**
+     * Returns the move a cell letter stands for.
+     *
+     * @throws IllegalArgumentException if the letter isn't a known move
+     */
     protected static SimpleAction getSimpleAction(char letter) {
         return switch (letter) {
             case 'E' -> SpecialAction.EARLY_SURRENDER;

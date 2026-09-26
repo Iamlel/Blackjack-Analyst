@@ -5,20 +5,36 @@ import me.lel.player.better.Better;
 
 import java.util.List;
 
+/**
+ * A bet spread stored as a list indexed by true count: entry {@code i} applies from a true count of {@code i} up to
+ * {@code i + 1}. Counts below 0 use the first entry and counts past the end use the last. The player sits out at or
+ * below an optional minimum count.
+ */
 public class SimpleBetSpread implements Better {
     protected final List<Bet> betSpread;
     protected final Integer minimum;
 
+    /**
+     * Creates a spread that never sits out.
+     */
     public SimpleBetSpread(List<Bet> betSpread) {
         this.betSpread = betSpread;
         this.minimum = null;
     }
 
+    /**
+     * Creates a spread that sits out at or below a true count of {@code minimum}, or never if it is {@code null}.
+     */
     public SimpleBetSpread(List<Bet> betSpread, Integer minimum) {
         this.betSpread = betSpread;
         this.minimum = minimum;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IllegalStateException if the spread has no entries
+     */
     @Override
     public Bet bet(double count) {
         if (betSpread.isEmpty()) {
@@ -31,6 +47,10 @@ public class SimpleBetSpread implements Better {
         return null;
     }
 
+    /**
+     * Returns a sample spread of one hand from 1 to 8 units, rising with each true count from 0 to 5. It sits out at
+     * -3 or below.
+     */
     public static Better useSampleSpread() {
         return new SimpleBetSpread(List.of(
                 new Bet(1, 1),

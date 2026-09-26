@@ -1,12 +1,15 @@
 package me.lel.core;
 
+/**
+ * Table rules for a game of blackjack. Build them with {@link Builder}, whose methods list the default for each rule.
+ */
 public class Rules {
     private final int minimumBet;
     private final int maximumBet;
     private final double penetration;
-    private final boolean h17; // hit17
-    private final boolean das; // double after split
-    private final boolean sas; // surrender after split
+    private final boolean h17;
+    private final boolean das;
+    private final boolean sas;
     private final int splitAmount;
     private final boolean insuranceAllowed;
     private final double insurancePay;
@@ -18,6 +21,9 @@ public class Rules {
     private final boolean hitSplitAces;
     private final boolean doubleSplitAces;
 
+    /**
+     * Copies the builder's settings. {@link Builder#build()} calls this for you.
+     */
     public Rules(Builder builder) {
         this.minimumBet = builder.minimumBet;
         this.maximumBet = builder.maximumBet;
@@ -37,42 +43,72 @@ public class Rules {
         this.doubleSplitAces = builder.doubleSplitAces;
     }
 
+    /**
+     * Returns the table minimum, which is also the size of one betting unit.
+     */
     public int getMinimumBet() {
         return minimumBet;
     }
 
+    /**
+     * Returns the largest initial bet allowed on one hand.
+     */
     public int getMaximumBet() {
         return maximumBet;
     }
 
+    /**
+     * Returns the fraction of the shoe dealt before it is reshuffled.
+     */
     public double getPenetration() {
         return penetration;
     }
 
+    /**
+     * Returns whether the dealer hits soft 17.
+     */
     public boolean isH17() {
         return h17;
     }
 
+    /**
+     * Returns whether doubling after a split is allowed.
+     */
     public boolean isDas() {
         return das;
     }
 
+    /**
+     * Returns whether surrendering after a split is allowed.
+     */
     public boolean isSas() {
         return sas;
     }
 
+    /**
+     * Returns how many times one player may split in a round, counted across all of their hands.
+     */
     public int getSplitAmount() {
         return splitAmount;
     }
 
+    /**
+     * Returns the insurance payout as a multiple of the insurance bet, so 2 means 2:1.
+     */
     public double getInsurancePay() {
         return insurancePay;
     }
 
+    /**
+     * Returns the blackjack payout as a multiple of the bet, so 1.5 means 3:2.
+     */
     public double getBlackjackPay() {
         return blackjackPay;
     }
 
+    /**
+     * Returns the most hands one player may be dealt at the start of a round. Hands created by splitting don't count.
+     */
     public int getMaxHands() {
         return maxHands;
     }
@@ -93,6 +129,9 @@ public class Rules {
         return reSplitAces;
     }
 
+    /**
+     * Returns whether split aces may take more cards. This is always true when {@link #isDoubleSplitAces()} is.
+     */
     public boolean isHitSplitAces() {
         return hitSplitAces;
     }
@@ -122,10 +161,17 @@ public class Rules {
                 + "\nDouble Split Aces Allowed?: " + this.doubleSplitAces;
     }
 
+    /**
+     * Returns rules with every setting at its {@link Builder} default.
+     */
     public static Rules buildDefault() {
         return new Builder().build();
     }
 
+    /**
+     * Builds {@link Rules}. Each setting starts at the default given on its method, so you only set the rules that
+     * differ.
+     */
     public static class Builder {
         private int minimumBet = 10;
         private int maximumBet = 1000;
@@ -145,8 +191,9 @@ public class Rules {
         private boolean doubleSplitAces = false;
 
         /**
-         * @param minimumBet must be >= 1
-         * @throws IllegalArgumentException Invalid argument.
+         * Sets the table minimum, which is also the size of one betting unit. Defaults to 10.
+         *
+         * @throws IllegalArgumentException if {@code minimumBet} is less than 1
          */
         public Builder minimumBet(int minimumBet) {
             if (minimumBet < 1) {
@@ -157,8 +204,9 @@ public class Rules {
         }
 
         /**
-         * @param maximumBet must be >= 1
-         * @throws IllegalArgumentException Invalid argument.
+         * Sets the largest initial bet allowed on one hand. Larger bets are capped at it. Defaults to 1000.
+         *
+         * @throws IllegalArgumentException if {@code maximumBet} is less than 1
          */
         public Builder maximumBet(int maximumBet) {
             if (maximumBet < 1) {
@@ -169,8 +217,9 @@ public class Rules {
         }
 
         /**
-         * @param penetration must be between 0 and 1
-         * @throws IllegalArgumentException Invalid argument.
+         * Sets the fraction of the shoe dealt before it is reshuffled. Defaults to 0.83.
+         *
+         * @throws IllegalArgumentException if {@code penetration} is 0 or less, or greater than 1
          */
         public Builder penetration(double penetration) {
             if (penetration > 1 || penetration <= 0) {
@@ -180,24 +229,35 @@ public class Rules {
             return this;
         }
 
+        /**
+         * Sets whether the dealer hits soft 17. Defaults to {@code true}.
+         */
         public Builder h17(boolean h17) {
             this.h17 = h17;
             return this;
         }
 
+        /**
+         * Sets whether doubling after a split is allowed. Defaults to {@code true}.
+         */
         public Builder das(boolean das) {
             this.das = das;
             return this;
         }
 
+        /**
+         * Sets whether surrendering after a split is allowed. Defaults to {@code false}.
+         */
         public Builder sas(boolean sas) {
             this.sas = sas;
             return this;
         }
 
         /**
-         * @param splitAmount can not be 0.
-         * @throws IllegalArgumentException Invalid argument.
+         * Sets how many times one player may split in a round, counted across all of their hands. Defaults to 3, so a
+         * single hand can become at most four. Use 0 to turn splitting off.
+         *
+         * @throws IllegalArgumentException if {@code splitAmount} is negative
          */
         public Builder splitAmount(int splitAmount) {
             if (splitAmount < 0) {
@@ -208,8 +268,9 @@ public class Rules {
         }
 
         /**
-         * @param insurancePay must be greater than 0.
-         * @throws IllegalArgumentException Invalid argument.
+         * Sets the insurance payout as a multiple of the insurance bet. Defaults to 2, which is 2:1.
+         *
+         * @throws IllegalArgumentException if {@code insurancePay} is 0 or less
          */
         public Builder insurancePay(double insurancePay) {
             if (insurancePay <= 0) {
@@ -220,8 +281,9 @@ public class Rules {
         }
 
         /**
-         * @param blackjackPay must be greater than 0.
-         * @throws IllegalArgumentException Invalid argument.
+         * Sets the blackjack payout as a multiple of the bet. Defaults to 1.5, which is 3:2.
+         *
+         * @throws IllegalArgumentException if {@code blackjackPay} is 0 or less
          */
         public Builder blackjackPay(double blackjackPay) {
             if (blackjackPay <= 0) {
@@ -232,8 +294,10 @@ public class Rules {
         }
 
         /**
-         * @param maxHands must be at least 1.
-         * @throws IllegalArgumentException Invalid argument.
+         * Sets the most hands one player may be dealt at the start of a round. Hands created by splitting don't
+         * count. Defaults to 2.
+         *
+         * @throws IllegalArgumentException if {@code maxHands} is less than 1
          */
         public Builder maxHands(int maxHands) {
             if (maxHands < 1) {
@@ -243,31 +307,49 @@ public class Rules {
             return this;
         }
 
+        /**
+         * Sets whether a player may surrender after the dealer checks for blackjack. Defaults to {@code true}.
+         */
         public Builder lateSurrender(boolean lateSurrender) {
             this.lateSurrender = lateSurrender;
             return this;
         }
 
+        /**
+         * Sets whether a player may surrender before the dealer checks for blackjack. Defaults to {@code false}.
+         */
         public Builder earlySurrender(boolean earlySurrender) {
             this.earlySurrender = earlySurrender;
             return this;
         }
 
+        /**
+         * Sets whether insurance is offered when the dealer shows an ace. Defaults to {@code true}.
+         */
         public Builder insuranceAllowed(boolean insuranceAllowed) {
             this.insuranceAllowed = insuranceAllowed;
             return this;
         }
 
+        /**
+         * Sets whether split aces may be split again. Defaults to {@code false}.
+         */
         public Builder reSplitAces(boolean reSplitAces) {
             this.reSplitAces = reSplitAces;
             return this;
         }
 
+        /**
+         * Sets whether split aces may take more than one card. Defaults to {@code false}.
+         */
         public Builder hitSplitAces(boolean hitSplitAces) {
             this.hitSplitAces = hitSplitAces;
             return this;
         }
 
+        /**
+         * Sets whether split aces may double. Turning this on also lets split aces hit. Defaults to {@code false}.
+         */
         public Builder doubleSplitAces(boolean doubleSplitAces) {
             this.doubleSplitAces = doubleSplitAces;
             return this;

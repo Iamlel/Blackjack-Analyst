@@ -16,6 +16,12 @@ public class IndexedRatioFunction implements MultivariateFunction {
     private final int denominator;
     private final int dimension;
 
+    /**
+     * Creates {@code x[numerator] / x[denominator]} over vectors with {@code dimension} entries.
+     *
+     * @throws IndexOutOfBoundsException if either index is outside the vector
+     * @throws IllegalArgumentException  if both indices are the same
+     */
     public IndexedRatioFunction(int numerator, int denominator, int dimension) {
         if (numerator < 0 || numerator >= dimension || denominator < 0 || denominator >= dimension) {
             throw new IndexOutOfBoundsException("The numerator and denominator must be inside the dimension.");

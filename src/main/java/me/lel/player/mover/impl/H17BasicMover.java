@@ -4,10 +4,15 @@ import me.lel.core.ActiveRules;
 import me.lel.core.action.Action;
 import me.lel.player.mover.Mover;
 
+/**
+ * Basic strategy for a multi-deck shoe where the dealer hits soft 17, written out in code. It assumes doubling after a
+ * split is allowed, ignores the count and never surrenders early.
+ */
 public class H17BasicMover implements Mover {
 
     @Override
     public Action action(int hand, int dealerHand, boolean soft, ActiveRules rules, double trueCount) {
+        // an ace counts as 11 so that range checks like dealerHand >= 10 include it
         if (dealerHand == 1) {
             dealerHand += 10;
         }
@@ -16,15 +21,13 @@ public class H17BasicMover implements Mover {
         // LATE SURRENDER OPTIONS
         // ------------------------
         if (rules.canSurrender() && !soft) {
-            // surrender 17 on A
             if (hand == 17 && dealerHand == 11) return Action.SURRENDER;
 
-            // surrender 16 vs 9,10,A
+            // 8,8 only surrenders against an ace while it can still be split
             if (hand == 16 && (dealerHand == 11 || (!rules.canSplit() && dealerHand >= 9))) {
                 return Action.SURRENDER;
             }
 
-            // surrender 15 vs 10,A
             if (hand == 15 && dealerHand >= 10)
                 return Action.SURRENDER;
 
@@ -45,7 +48,7 @@ public class H17BasicMover implements Mover {
                 case 14:  // 7,7
                     if (dealerHand <= 7) return Action.SPLIT;
                     break;
-                case 12:  // 6,6
+                case 12:  // 6,6, or A,A when soft
                     if (soft || (dealerHand <= 6)) {
                         return Action.SPLIT;
                     }
@@ -68,32 +71,27 @@ public class H17BasicMover implements Mover {
         // SOFT HANDS
         // ------------------------
         if (soft) {
-            // Soft 20 (A,9)
             if (hand == 20) return Action.STAND;
 
-            // Soft 19 (A,8)
             if (hand == 19) {
                 if (dealerHand == 6) return Action.DOUBLE_STAND;
                 return Action.STAND;
             }
 
-            // Soft 18 (A,7)
             if (hand == 18) {
                 if (dealerHand <= 6) return Action.DOUBLE_STAND;
                 if (dealerHand <= 8) return Action.STAND;
                 return Action.HIT;
             }
 
-            // Soft 17 (A,6), Soft 16 (A,5), Soft 15 (A,4), Soft 14 (A,3), Soft 13 (A,2)
             if (hand >= 13 && hand <= 17) {
-                // map soft totals to doubling ranges
-                if (hand == 17) { // A,6
+                if (hand == 17) {
                     if (dealerHand >= 3 && dealerHand <= 6) return Action.DOUBLE;
                 }
-                if (hand == 15 || hand == 16) { // A,4 or A,5
+                if (hand == 15 || hand == 16) {
                     if (dealerHand >= 4 && dealerHand <= 6) return Action.DOUBLE;
                 }
-                if (hand == 13 || hand == 14) { // A,2 or A,3
+                if (hand == 13 || hand == 14) {
                     if (dealerHand >= 5 && dealerHand <= 6) return Action.DOUBLE;
                 }
                 return Action.HIT;
@@ -103,37 +101,30 @@ public class H17BasicMover implements Mover {
         // ------------------------
         // HARD HANDS
         // ------------------------
-        // 17 and up
         if (hand >= 17) return Action.STAND;
 
-        // Hard 11
         if (hand == 11) return Action.DOUBLE;
 
-        // Hard 10
         if (hand == 10) {
             if (dealerHand <= 9) return Action.DOUBLE;
             return Action.HIT;
         }
 
-        // Hard 9
         if (hand == 9) {
             if (dealerHand >= 3 && dealerHand <= 6) return Action.DOUBLE;
             return Action.HIT;
         }
 
-        // Hard 12
         if (hand == 12) {
             if (dealerHand >= 4 && dealerHand <= 6) return Action.STAND;
             return Action.HIT;
         }
 
-        // Hard 13–16
         if (hand >= 13) {
             if (dealerHand <= 6) return Action.STAND;
             return Action.HIT;
         }
 
-        // Hard <= 8
         return Action.HIT;
     }
 

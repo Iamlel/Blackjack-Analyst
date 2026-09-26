@@ -19,6 +19,9 @@ import java.text.DecimalFormat;
  * <p>
  * A player who can no longer cover the table minimum is dead: they are dealt out, and every round after that is
  * recorded as 0 profit and 0 wagered for them. Once every player is dead, no more rounds are recorded.
+ * <p>
+ * Rounds draw from an SSJ {@link MRG32k3a} stream, one substream per round. {@link #reset()} puts the players, the
+ * game and the stream back at the start, so running the same number of rounds again gives the same results.
  */
 public class Simulation {
     private final RandomStream stream = new MRG32k3a();
@@ -30,39 +33,72 @@ public class Simulation {
         this.playerStatContainer = BlackjackTallyList.create(game);
     }
 
+    /**
+     * Plays and records {@code rounds} rounds. Each call starts the statistics over, while bankrolls and the shoe
+     * carry on from where the last call left them.
+     */
     public void run(int rounds) {
         MonteCarloExperiment.simulateRuns(game, rounds, stream, playerStatContainer);
     }
 
+    /**
+     * Plays {@code rounds} rounds like {@link #run}, then opens a window charting each player's bankroll with about
+     * 500 points per player. Closing the window exits the JVM.
+     */
     public void runWithDisplay(int rounds) {
         Graph graph = new Graph(playerStatContainer, rounds);
         runWithDisplay(rounds, graph);
     }
 
+    /**
+     * Same as {@link #runWithDisplay(int)}, with a point every {@code dx} rounds.
+     */
     public void runWithDisplay(int rounds, int dx) {
         Graph graph = new Graph(playerStatContainer, rounds);
         graph.setDx(dx);
         runWithDisplay(rounds, graph);
     }
 
+    /**
+     * Same as {@link #runWithDisplay(int)}, with a graph you set up yourself. The graph has to be built on
+     * {@link #getPlayerStatContainer()}, and it stops recording once its window opens.
+     */
     public void runWithDisplay(int rounds, Graph graph) {
         this.run(rounds);
         graph.display();
         graph.close();
     }
 
+    /**
+     * Returns {@link #getResults(int, int)} for the first player, without hourly EV.
+     */
     public String getFirstResults() {
         return getResults(0, 0);
     }
 
+    /**
+     * Returns {@link #getResults(int, int)} for the first player.
+     */
     public String getFirstResults(int roundsPerHour) {
         return getResults(0, roundsPerHour);
     }
 
+    /**
+     * Returns {@link #getResults(int, int)} without hourly EV.
+     */
     public String getResults(int i) {
         return getResults(i, 0);
     }
 
+    /**
+     * Returns a readable report of player {@code i}'s results, such as EV, edge, variance and risk of ruin.
+     *
+     * @param i             the player's seat index
+     * @param roundsPerHour rounds per hour, used to add EV per hour; 0 leaves it out
+     * @return the report, one statistic per line
+     * @throws IndexOutOfBoundsException if there is no player {@code i}
+     * @throws IllegalStateException     if no rounds have been recorded
+     */
     public String getResults(int i, int roundsPerHour) {
         if (i >= playerStatContainer.getPlayerCount()) {
             throw new IndexOutOfBoundsException("There are not enough players for that.");
@@ -118,6 +154,10 @@ public class Simulation {
         return stringBuilder.toString();
     }
 
+    /**
+     * Restores every player's starting bankroll, the game's starting state and the random stream, then clears the
+     * statistics.
+     */
     public void reset() {
         Player[] players = game.getPlayers();
         for (int i = 0; i < players.length; i++) {
@@ -128,14 +168,25 @@ public class Simulation {
         this.resetStatistics();
     }
 
+    /**
+     * Moves the random stream back to its start. That alone doesn't replay earlier rounds, because the shoe keeps its
+     * current order. Use {@link #reset()} to replay.
+     */
     public void resetRandom() {
         stream.resetStartStream();
     }
 
+    /**
+     * Clears the statistics. The players' current bankrolls become the starting bankrolls used for risk of ruin.
+     */
     public void resetStatistics() {
         this.playerStatContainer = BlackjackTallyList.create(game);
     }
 
+    /**
+     * Returns the tallies behind the statistics, for example to build a {@link Graph}. {@link #resetStatistics()}
+     * replaces it with a new one.
+     */
     public BlackjackTallyList getPlayerStatContainer() {
         return playerStatContainer;
     }

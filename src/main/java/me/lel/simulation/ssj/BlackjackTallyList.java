@@ -32,6 +32,11 @@ public class BlackjackTallyList extends ListOfTalliesWithCovariance<Tally> {
         super();
     }
 
+    /**
+     * Creates the list for {@code game}. Each player's current bankroll becomes their starting bankroll.
+     *
+     * @throws IllegalArgumentException if the game doesn't report a profit and a wager for every player
+     */
     public static BlackjackTallyList create(SimpleGame game) {
         BlackjackTallyList playerStatContainer = new BlackjackTallyList(game);
         if (game.getPerformanceDim() != 2 * playerStatContainer.players) {
@@ -75,29 +80,46 @@ public class BlackjackTallyList extends ListOfTalliesWithCovariance<Tally> {
         return players;
     }
 
+    /**
+     * Returns player {@code i}'s profit tally.
+     */
     public BlackjackTally getPlayerTally(int i) {
         return (BlackjackTally) get(i);
     }
 
+    /**
+     * Returns the tally of player {@code i}'s initial wager per round.
+     */
     public Tally getWagerTally(int i) {
         return get(players + i);
     }
 
-    // initial amount wagered in $ per round, including rounds sat out (which wager 0)
+    /**
+     * Returns player {@code i}'s average initial wager per round, in dollars. Rounds sat out count as 0.
+     */
     public double getAverageBet(int i) {
         return getWagerTally(i).average();
     }
 
-    // edge in percent: EV / (amount wagered) * 100%. positive means the player has the advantage
+    /**
+     * Returns player {@code i}'s edge as a percentage: mean profit divided by mean initial wager. A positive edge
+     * means the player has the advantage.
+     */
     public double getEdge(int i) {
         return edges[i].average() * 100;
     }
 
+    /**
+     * Returns the half-width of a 95% confidence interval on {@link #getEdge(int)}, in percentage points.
+     */
     public double getEdgeMarginOfError(int i) {
         return getEdgeMarginOfError(i, 0.95);
     }
 
-    // in percent, from the delta method using the covariance between profit and wager
+    /**
+     * Same as {@link #getEdgeMarginOfError(int)} at confidence {@code level}. The interval comes from the delta
+     * method, which accounts for the covariance between profit and wager.
+     */
     public double getEdgeMarginOfError(int i, double level) {
         double[] centerAndRadius = new double[2];
         edges[i].confidenceIntervalDelta(level, centerAndRadius);

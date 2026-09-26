@@ -16,6 +16,11 @@ import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Charts each player's bankroll change during a simulation with JFreeChart. It listens to a
+ * {@link BlackjackTallyList} as rounds are recorded and keeps a point every {@code dx} rounds. With a single player,
+ * the chart also draws the EV line, the path the bankroll would follow at exactly the measured EV.
+ */
 public class Graph {
     private final BlackjackTallyList playerStatContainer;
     private final ArrayOfObservationListener listener;
@@ -24,6 +29,13 @@ public class Graph {
     private final double[] bankrollChange;
     private int dx;
 
+    /**
+     * Creates a graph that records every round added to {@code playerStatContainer} from now on. Broadcasting is
+     * turned on for the container.
+     *
+     * @param playerStatContainer       the tallies to follow
+     * @param totalMeasurementsExpected rounds you expect to record, used to space about 500 points per player
+     */
     public Graph(BlackjackTallyList playerStatContainer, int totalMeasurementsExpected) {
         this.listener = this::record;
         for (int i = 0; i < playerStatContainer.getPlayerCount(); i++) {
@@ -53,6 +65,9 @@ public class Graph {
         }
     }
 
+    /**
+     * Opens a window with the chart, or does nothing if no rounds were recorded. Closing the window exits the JVM.
+     */
     public void display() {
         if (bankrolls.getFirst().isEmpty()) {
             return;
@@ -108,10 +123,16 @@ public class Graph {
         return series;
     }
 
+    /**
+     * Stops recording rounds. The points already recorded can still be displayed.
+     */
     public void close() {
         playerStatContainer.removeArrayOfObservationListener(listener);
     }
 
+    /**
+     * Sets how many rounds apart the points are. Call it before any rounds are recorded.
+     */
     public void setDx(int dx) {
         this.dx = dx;
     }

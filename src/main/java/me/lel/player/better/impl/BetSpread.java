@@ -7,20 +7,35 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * A bet spread keyed by true count. Each entry applies from its count up to the next entry's, and counts below the
+ * lowest entry use the lowest entry. The player sits out below an optional minimum count.
+ */
 public class BetSpread implements Better {
     private final TreeMap<Double, Bet> betSpread;
     private final Double minimum;
 
+    /**
+     * Creates a spread that never sits out.
+     */
     public BetSpread(TreeMap<Double, Bet> betSpread) {
         this.betSpread = betSpread;
         this.minimum = null;
     }
 
+    /**
+     * Creates a spread that sits out below a true count of {@code minimum}, or never if it is {@code null}.
+     */
     public BetSpread(TreeMap<Double, Bet> betSpread, Double minimum) {
         this.betSpread = betSpread;
         this.minimum = minimum;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IllegalStateException if the spread has no entries
+     */
     @Override
     public Bet bet(double count) {
         if (betSpread.isEmpty()) {
@@ -37,6 +52,10 @@ public class BetSpread implements Better {
         return null;
     }
 
+    /**
+     * Returns a sample spread of one hand from 1 to 8 units, rising with each true count from 0 to 5. It sits out
+     * below -3.
+     */
     public static Better useSampleSpread() {
         TreeMap<Double, Bet> betSpread = new TreeMap<>();
 
@@ -50,6 +69,13 @@ public class BetSpread implements Better {
         return new BetSpread(betSpread, -3.0);
     }
 
+    /**
+     * Reads a spread from CSV, such as the bundled {@code samplebet.csv}. The first line is a header and is skipped.
+     * The first column of the second line is the minimum count, below which the player sits out. Every line after
+     * that is {@code trueCount,hands,units}. The reader is left open.
+     *
+     * @throws IOException if reading fails
+     */
     public static BetSpread load(BufferedReader br) throws IOException {
         TreeMap<Double, Bet> betSpread = new TreeMap<>();
 

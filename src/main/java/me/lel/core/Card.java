@@ -1,5 +1,8 @@
 package me.lel.core;
 
+/**
+ * A card rank. There are no suits because nothing in the simulator depends on them.
+ */
 public enum Card {
     ACE(1),
     TWO(2),
@@ -21,6 +24,10 @@ public enum Card {
         this.value = value;
     }
 
+    /**
+     * Returns the card's blackjack value, with an ace as 1 and face cards as 10. {@link me.lel.core.hand.Hand}
+     * decides when an ace counts as 11.
+     */
     public int getValue() {
         return this.value;
     }
