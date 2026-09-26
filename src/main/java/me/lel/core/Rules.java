@@ -106,10 +106,10 @@ public class Rules {
         return "Rules"
                 + "\nMinimum Bet: " + this.minimumBet
                 + "\nMaximum Bet: " + this.maximumBet
-                + "\nPenetration: " + this.penetration + "%"
+                + "\nPenetration: " + this.penetration
                 + "\nHit 17: " + this.h17
                 + "\nDouble After Split: " + this.das
-                + "\nSplit After Split: " + this.sas
+                + "\nSurrender After Split: " + this.sas
                 + "\nSplit Amount: " + this.splitAmount
                 + "\nInsurance Allowed?: " + this.insuranceAllowed
                 + "\nInsurance Multiplier: " + this.insurancePay
@@ -201,7 +201,7 @@ public class Rules {
          */
         public Builder splitAmount(int splitAmount) {
             if (splitAmount < 0) {
-                throw new IllegalArgumentException("Split amount can not be 0.");
+                throw new IllegalArgumentException("Split amount cannot be negative.");
             }
             this.splitAmount = splitAmount;
             return this;
@@ -236,7 +236,7 @@ public class Rules {
          * @throws IllegalArgumentException Invalid argument.
          */
         public Builder maxHands(int maxHands) {
-            if (blackjackPay < 1) {
+            if (maxHands < 1) {
                 throw new IllegalArgumentException("At least one hand must be allowed.");
             }
             this.maxHands = maxHands;
