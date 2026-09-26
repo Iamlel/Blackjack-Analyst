@@ -25,4 +25,12 @@ public class FakePlayer extends Player {
     public boolean isDead(int minimumBet) {
         return false;
     }
+
+    /**
+     * Returns a new fake player with the same strategies. Its bankroll starts at 0, like any fake player's.
+     */
+    @Override
+    public FakePlayer clone() {
+        return new FakePlayer(getMover(), getBetter(), getSideBetMover());
+    }
 }

@@ -100,6 +100,18 @@ public class Player {
         return bankroll;
     }
 
+    protected Mover getMover() {
+        return mover;
+    }
+
+    protected Better getBetter() {
+        return better;
+    }
+
+    protected SideBetMover getSideBetMover() {
+        return sideBet;
+    }
+
     /**
      * Returns a new player whose starting bankroll is this player's current bankroll. The copy shares this player's
      * {@link Mover}, {@link Better} and {@link SideBetMover}.
