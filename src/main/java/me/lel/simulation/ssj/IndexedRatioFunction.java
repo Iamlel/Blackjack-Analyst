@@ -11,10 +11,11 @@ import umontreal.ssj.util.RatioFunction;
  * covariance count in the delta method confidence interval.
  */
 public class IndexedRatioFunction implements MultivariateFunction {
-    private final RatioFunction ratio = new RatioFunction();
     private final int numerator;
     private final int denominator;
     private final int dimension;
+
+    private final RatioFunction ratio = new RatioFunction();
 
     /**
      * Creates {@code x[numerator] / x[denominator]} over vectors with {@code dimension} entries.

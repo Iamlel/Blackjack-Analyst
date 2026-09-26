@@ -7,10 +7,10 @@ import me.lel.core.Card;
  * bust the hand.
  */
 public class Hand {
-    private int runningHandTotal = 0;
-
     private final Card first;
     private final Card second;
+
+    private int runningHandTotal = 0;
 
     private boolean initial;
     private boolean soft;

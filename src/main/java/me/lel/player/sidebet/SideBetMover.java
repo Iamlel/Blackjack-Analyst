@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
  */
 public class SideBetMover {
     private final static Pattern PATTERN = Pattern.compile("([A-z ]+),(-?\\d+)([+-])");
+
     private final Map<String, SideBet> bets;
 
     /**

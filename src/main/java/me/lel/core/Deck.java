@@ -13,8 +13,8 @@ import java.util.*;
  */
 public class Deck {
     private final Card[] deck;
-    private int topIndex;
     private final int lastCard;
+    private int topIndex;
 
     private final CountSystem countSystem;
     private int runningCount;
@@ -28,10 +28,10 @@ public class Deck {
      * @param penetration fraction of the shoe dealt before {@link #isShuffleNecessary()} asks for a shuffle
      */
     public Deck(int decks, CountSystem countSystem, double penetration) {
-        this.countSystem = countSystem;
-        this.lastCard = (int) (52 * decks * (1 - penetration));
-
         this.deck = new Card[52 * decks];
+        this.lastCard = (int) (52 * decks * (1 - penetration));
+        this.countSystem = countSystem;
+
         this.reset();
     }
 

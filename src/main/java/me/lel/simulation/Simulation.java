@@ -24,8 +24,8 @@ import java.text.DecimalFormat;
  * game and the stream back at the start, so running the same number of rounds again gives the same results.
  */
 public class Simulation {
-    private final RandomStream stream = new MRG32k3a();
     private final SimpleGame game;
+    private final RandomStream stream = new MRG32k3a();
     private BlackjackTallyList playerStatContainer;
 
     public Simulation(SimpleGame game) {

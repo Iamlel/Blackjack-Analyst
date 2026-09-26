@@ -37,16 +37,16 @@ public class Graph {
      * @param totalMeasurementsExpected rounds you expect to record, used to space about 500 points per player
      */
     public Graph(BlackjackTallyList playerStatContainer, int totalMeasurementsExpected) {
+        this.playerStatContainer = playerStatContainer;
         this.listener = this::record;
+
         for (int i = 0; i < playerStatContainer.getPlayerCount(); i++) {
             bankrolls.add(new ArrayList<>());
         }
-
         this.bankrollChange = new double[playerStatContainer.getPlayerCount()];
         // No reason why it should be 500, but it seems to work well enough
         this.dx = (int) Math.ceil((double) totalMeasurementsExpected / 500);
 
-        this.playerStatContainer = playerStatContainer;
         this.playerStatContainer.setBroadcasting(true);
         this.playerStatContainer.addArrayOfObservationListener(listener);
     }

@@ -31,8 +31,8 @@ import java.util.Map;
  * them. Splitting or doubling needs a bankroll of at least twice the hand's bet.
  */
 public class Blackjack implements SimpleGame {
-    private final Rules rules;
     private final Player[] players;
+    private final Rules rules;
 
     private final Deck deck;
     private DealerHand dealerHand;
