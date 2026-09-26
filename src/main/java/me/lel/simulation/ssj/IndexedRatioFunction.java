@@ -20,6 +20,10 @@ public class IndexedRatioFunction implements MultivariateFunction {
         if (numerator < 0 || numerator >= dimension || denominator < 0 || denominator >= dimension) {
             throw new IndexOutOfBoundsException("The numerator and denominator must be inside the dimension.");
         }
+        // x[i] / x[i] is constant, so the gradient below (one partial per entry) would be wrong for it
+        if (numerator == denominator) {
+            throw new IllegalArgumentException("The numerator and denominator must be different entries.");
+        }
         this.numerator = numerator;
         this.denominator = denominator;
         this.dimension = dimension;
@@ -32,11 +36,16 @@ public class IndexedRatioFunction implements MultivariateFunction {
 
     @Override
     public double evaluate(double... x) {
+        checkLength(x);
         return ratio.evaluate(x[numerator], x[denominator]);
     }
 
     @Override
     public double evaluateGradient(int i, double... x) {
+        checkLength(x);
+        if (i < 0 || i >= dimension) {
+            throw new IndexOutOfBoundsException("Invalid value of i: " + i);
+        }
         if (i == numerator) {
             return ratio.evaluateGradient(0, x[numerator], x[denominator]);
         }
@@ -44,5 +53,12 @@ public class IndexedRatioFunction implements MultivariateFunction {
             return ratio.evaluateGradient(1, x[numerator], x[denominator]);
         }
         return 0;
+    }
+
+    // MultivariateFunction requires x to have exactly getDimension() entries
+    private void checkLength(double[] x) {
+        if (x.length != dimension) {
+            throw new IllegalArgumentException("Invalid length of x: " + x.length + ", required " + dimension);
+        }
     }
 }

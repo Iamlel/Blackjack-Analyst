@@ -131,6 +131,8 @@ public class Blackjack implements SimpleGame {
             List<PlayerHand> playerHands = new ArrayList<>();
             this.hands.put(p, playerHands);
             this.splitTimes.put(p, 0);
+            // cleared every round, so sitting out or being dead records 0 instead of the last bet
+            performance[players.length + i] = 0;
 
             if (isDead(p)) {
                 continue;

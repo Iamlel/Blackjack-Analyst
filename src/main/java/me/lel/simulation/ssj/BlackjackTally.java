@@ -73,7 +73,7 @@ public class BlackjackTally extends Tally {
 
     // risk of ruin in percent
     public double getROR() {
-        return Math.min(1, Math.exp(-2 * this.average() * startingBankroll / this.variance())) * 100;
+        return this.getROR(startingBankroll);
     }
 
     // risk of ruin in percent

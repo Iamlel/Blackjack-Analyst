@@ -14,8 +14,8 @@ import umontreal.ssj.stat.list.ListOfTalliesWithCovariance;
  * initial amount player {@code i} wagered per round. Keeping both in one list keeps their covariance.
  * <p>
  * Player {@code i}'s edge is mean profit / mean wager, which SSJ computes with a {@link FunctionOfMultipleMeansTally}
- * built on this list. It reads the tallies here instead of keeping its own copy, so never call its {@code add} or
- * {@code init}: that would add to or reset this list.
+ * built on this list. It reads the tallies here instead of keeping its own copy, so it stays private: calling its
+ * {@code add} or {@code init} would add to or reset this list.
  * <p>
  * Once every player is dead the remaining rounds are not played by anyone, so they are not recorded.
  */
@@ -86,11 +86,6 @@ public class BlackjackTallyList extends ListOfTalliesWithCovariance<Tally> {
     // initial amount wagered in $ per round, including rounds sat out (which wager 0)
     public double getAverageBet(int i) {
         return getWagerTally(i).average();
-    }
-
-    // mean profit / mean wager, as a fraction
-    public FunctionOfMultipleMeansTally getEdgeTally(int i) {
-        return edges[i];
     }
 
     // edge in percent: EV / (amount wagered) * 100%. positive means the player has the advantage
