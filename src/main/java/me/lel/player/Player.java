@@ -65,6 +65,11 @@ public class Player {
         return (bankroll >= amount);
     }
 
+    // a dead player cannot cover the table minimum anymore
+    public boolean isDead(int minimumBet) {
+        return !has(minimumBet);
+    }
+
     public double getBankroll() {
         return bankroll;
     }

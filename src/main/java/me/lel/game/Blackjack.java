@@ -13,6 +13,7 @@ import me.lel.player.Player;
 import umontreal.ssj.rng.RandomStream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ public class Blackjack implements SimpleGame {
     private final Deck deck;
     private DealerHand dealerHand;
 
+    // [profit of each player, initial amount wagered by each player] for the last round
     private final double[] performance;
 
     private Map<Player, List<PlayerHand>> hands;
@@ -46,25 +48,43 @@ public class Blackjack implements SimpleGame {
         this.players = players;
         this.rules = rules;
         this.deck = new Deck(decks, countSystem, rules.getPenetration());
-        this.performance = new double[players.length];
+        this.performance = new double[2 * players.length];
     }
 
     @Override
     public void simulate(RandomStream stream) {
-        for (int i = 0; i < players.length; i++) {
-            performance[i] = -players[i].getBankroll();
-        }
+        if (hasLivingPlayers()) {
+            for (int i = 0; i < players.length; i++) {
+                performance[i] = -players[i].getBankroll();
+            }
 
-        playRound(stream);
+            playRound(stream);
 
-        for (int i = 0; i < players.length; i++) {
-            performance[i] += players[i].getBankroll();
+            for (int i = 0; i < players.length; i++) {
+                performance[i] += players[i].getBankroll();
+            }
+        } else {
+            Arrays.fill(performance, 0);
         }
     }
 
     @Override
     public double[] getPerformance() {
         return performance;
+    }
+
+    @Override
+    public boolean hasLivingPlayers() {
+        for (Player player : players) {
+            if (!isDead(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected boolean isDead(Player player) {
+        return player.isDead(rules.getMinimumBet());
     }
 
     @Override
@@ -106,8 +126,15 @@ public class Blackjack implements SimpleGame {
         this.hands = new HashMap<>();
         this.splitTimes = new HashMap<>();
         int totalHandCounter = 0;
-        for (Player p : players) {
+        for (int i = 0; i < players.length; i++) {
+            Player p = players[i];
             List<PlayerHand> playerHands = new ArrayList<>();
+            this.hands.put(p, playerHands);
+            this.splitTimes.put(p, 0);
+
+            if (isDead(p)) {
+                continue;
+            }
 
             int handCounter = 0;
             int betAmount = 0;
@@ -122,11 +149,10 @@ public class Blackjack implements SimpleGame {
                 }
 
                 playerHands.add(new PlayerHand(bet, deck.takeCard(stream), deck.takeCard(stream)));
+                performance[players.length + i] = betAmount;
                 handCounter++;
             }
             totalHandCounter += handCounter;
-            this.hands.put(p, playerHands);
-            this.splitTimes.put(p, 0);
         }
         this.dealerHand = new DealerHand(deck.takeCard(stream), deck.takeCard(stream));
         return (totalHandCounter > 0);

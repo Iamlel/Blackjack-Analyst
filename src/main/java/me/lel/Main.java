@@ -32,8 +32,8 @@ public class Main {
         MonteCarloExperiment.simulateRuns(bj, 1000, new MRG32k3a(), BlackjackTallyList.create(bj));
 
         Simulation test = new Simulation(bj);
-        test.runWithDisplay(500_000_000);
-        test.results(0, 100);
+        test.runWithDisplay(50_000_000);
+        System.out.println(test.getResults(0, 100));
     }
 
     public static BufferedReader getReader(String name) {

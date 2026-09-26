@@ -1,14 +1,16 @@
 package me.lel.simulation.ssj;
 
-import me.lel.core.Rules;
-import me.lel.player.better.impl.BetSpread;
-import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.stat.Tally;
 
-// TODO : deleted kelly bet because the bet ramp is fixed, but once you make it change then add it back
+// Make a different Tally that has order included so we can have drawdown in that and put that in the Simulation lib that you make
 public class BlackjackTally extends Tally {
     private final int bettingUnit;
     private final double startingBankroll;
+
+    // bankroll change so far, its highest point, and the largest drop from a highest point (all in $)
+    private double profit;
+    private double peakProfit;
+    private double maxDrawdown;
 
     public BlackjackTally(int bettingUnit, double startingBankroll) {
         this.bettingUnit = bettingUnit;
@@ -22,6 +24,27 @@ public class BlackjackTally extends Tally {
         super(name);
     }
 
+    @Override
+    public void init() {
+        super.init();
+        this.profit = 0;
+        this.peakProfit = 0;
+        this.maxDrawdown = 0;
+    }
+
+    @Override
+    public void add(double x) {
+        super.add(x);
+        if (!collect) {
+            return;
+        }
+
+        this.profit += x;
+        this.peakProfit = Math.max(peakProfit, profit);
+        this.maxDrawdown = Math.max(maxDrawdown, peakProfit - profit);
+    }
+
+    // $ per round
     public double getEV() {
         return this.average();
     }
@@ -74,19 +97,13 @@ public class BlackjackTally extends Tally {
         return 1_000_000 * getSharpeRatio() * getSharpeRatio();
     }
 
-    // TODO : have to fully test this but I think it should work
-    public double getHouseEdge(BetSpread betSpread, int minimum, Rules rules) {
-        // determined from testing. Not sure why mu is -1
-        double avgBet = 0.0;
+    // largest drop in $ from a bankroll high to a later low
+    public double getMaxDrawdown() {
+        return maxDrawdown;
+    }
 
-        for (int tc = minimum; tc < 1000; tc++) {
-            double probability = NormalDist.cdf(-1, 3, tc + 1) - NormalDist.cdf(-1, 3, tc);
-            avgBet += probability
-                    * Math.min(rules.getMaximumBet(), betSpread.bet(tc).Units() * rules.getMinimumBet())
-                    * Math.min(rules.getMaxHands(), betSpread.bet(tc).Hands());
-        }
-
-        return avgBet;
+    public double getUnitMaxDrawdown() {
+        return maxDrawdown / bettingUnit;
     }
 
     public int getBettingUnit() {
