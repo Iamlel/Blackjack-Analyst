@@ -84,7 +84,7 @@ public class H17BasicMover implements Mover {
                 return Action.HIT;
             }
 
-            if (hand >= 13 && hand <= 17) {
+            if (hand >= 12 && hand <= 17) {
                 if (hand == 17) {
                     if (dealerHand >= 3 && dealerHand <= 6) return Action.DOUBLE;
                 }
