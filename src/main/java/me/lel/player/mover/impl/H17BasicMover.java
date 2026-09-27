@@ -9,7 +9,7 @@ import me.lel.player.mover.Mover;
  * play for each hand against each dealer up card when you don't count cards. This one assumes doubling after a split is
  * allowed, ignores the count and never surrenders early.
  */
-public class H17BasicMover implements Mover {
+public final class H17BasicMover implements Mover {
 
     @Override
     public Action action(int hand, int dealerHand, boolean soft, ActiveRules rules, double trueCount) {

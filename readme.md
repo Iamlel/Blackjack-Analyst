@@ -23,8 +23,6 @@ Blackjack Analyst deals blackjack to itself, fast. You describe the table (rules
 
 There's no settings screen. Everything is a Java class, and most of it is meant to be extended, so a new counting system, betting strategy or blackjack variant is usually one small class. Strategies can also come from CSV files, which lets you change a bet spread or add an index play without writing Java.
 
-It's a fun project. If you don't know blackjack well, the [glossary](#blackjack-terms) explains every term used here.
-
 <details>
 <summary><b>Table of contents</b></summary>
 

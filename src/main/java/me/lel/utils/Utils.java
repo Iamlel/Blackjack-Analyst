@@ -1,6 +1,6 @@
 package me.lel.utils;
 
-public class Utils {
+public final class Utils {
     /**
      * Returns {@code true} when {@code x} fails a comparison against the point {@code y}.
      * <p>
