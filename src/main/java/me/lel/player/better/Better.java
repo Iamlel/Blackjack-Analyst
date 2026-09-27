@@ -1,8 +1,7 @@
 package me.lel.player.better;
 
 /**
- * Decides how much to bet each round. A counter bets more when the true count is high, because the cards left favor
- * them.
+ * Decides how much to bet each round.
  */
 public interface Better {
     /**
