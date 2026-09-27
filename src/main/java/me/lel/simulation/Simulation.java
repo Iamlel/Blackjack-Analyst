@@ -8,8 +8,6 @@ import umontreal.ssj.mcqmctools.MonteCarloExperiment;
 import umontreal.ssj.rng.MRG32k3a;
 import umontreal.ssj.rng.RandomStream;
 
-import java.text.DecimalFormat;
-
 /**
  * Runs a {@link SimpleGame} and collects per-player statistics.
  * <p>
@@ -114,7 +112,8 @@ public class Simulation {
     }
 
     /**
-     * Returns a readable report of player {@code i}'s results, such as EV, edge, variance and risk of ruin.
+     * Returns a readable report of player {@code i}'s results, grouped into bankroll, expected value, volatility, and
+     * risk and efficiency. EV and edge come with 95% confidence intervals.
      *
      * @param i             the player's seat index
      * @param roundsPerHour rounds per hour, used to add EV per hour; 0 leaves it out
@@ -128,53 +127,72 @@ public class Simulation {
         }
 
         Player player = this.getPlayer(i);
-        BlackjackTally playerStatistics = playerStatContainer.getPlayerTally(i);
+        BlackjackTally stats = playerStatContainer.getPlayerTally(i);
 
-        if (playerStatistics.getN() == 0) {
+        if (stats.getN() == 0) {
             throw new IllegalStateException("There are no rounds to look at yet.");
         }
 
-        StringBuilder stringBuilder = new StringBuilder();
+        double ev = stats.getEV();
+        double evMargin = stats.getMarginOfError();
+        double edge = playerStatContainer.getEdge(i);
+        double edgeMargin = playerStatContainer.getEdgeMarginOfError(i);
 
-        String newline = System.lineSeparator();
-        DecimalFormat df = new DecimalFormat("#,###.##");
+        StringBuilder report = new StringBuilder();
+        report.append("Player %d after %,d rounds (1 unit = %s)%n".formatted(i + 1, stats.getN(), dollars(stats.getBettingUnit(), 0)));
 
-        stringBuilder.append(newline);
-        stringBuilder.append("Information").append(newline);
-        stringBuilder.append("Rounds: ").append(String.format("%,d", playerStatistics.getN())).append(newline);
-        stringBuilder.append("Bankroll: ~").append(df.format(player.getBankroll())).append(newline);
-        stringBuilder.append("Starting Bankroll: ~").append(df.format(playerStatistics.getStartingBankroll())).append(newline);
-        stringBuilder.append("Difference: ~").append(df.format(player.getBankroll() - playerStatistics.getStartingBankroll())).append(newline);
+        section(report, "Bankroll");
+        line(report, "Starting", dollars(stats.getStartingBankroll(), 2));
+        line(report, "Ending", dollars(player.getBankroll(), 2));
+        line(report, "Change", signedDollars(player.getBankroll() - stats.getStartingBankroll()));
         if (player.isDead(game.getRules().getMinimumBet())) {
-            stringBuilder.append("Status: Dead (cannot cover the table minimum)").append(newline);
+            line(report, "Status", "Dead, can't cover the %s table minimum".formatted(dollars(game.getRules().getMinimumBet(), 0)));
         }
-        stringBuilder.append(newline);
-        stringBuilder.append("Profit").append(newline);
-        stringBuilder.append("EV ($/round): ~$").append(df.format(playerStatistics.getEV())).append(newline);
-        stringBuilder.append("95% CI ($/round): +/- $").append(new DecimalFormat("#.####").format(playerStatistics.getMarginOfError())).append(newline);
 
+        section(report, "Expected value");
+        line(report, "Per round", dollars(ev, 4) + "  95% CI " + interval(dollars(ev - evMargin, 4), dollars(ev + evMargin, 4)));
+        line(report, "Per round in units", "%.4f units".formatted(stats.getUnitEV()));
         if (roundsPerHour > 0) {
-            stringBuilder.append("EV ($/hr): ~$").append(df.format(playerStatistics.getEV() * roundsPerHour)).append(newline);
+            line(report, "Per hour", "%s at %,d rounds per hour".formatted(dollars(ev * roundsPerHour, 2), roundsPerHour));
         }
+        line(report, "Average bet", dollars(playerStatContainer.getAverageBet(i), 2) + " per round");
+        line(report, "Player edge", percent(edge) + "  95% CI " + interval(percent(edge - edgeMargin), percent(edge + edgeMargin)));
 
-        stringBuilder.append("Average Bet ($/round): ~$").append(df.format(playerStatContainer.getAverageBet(i))).append(newline);
-        stringBuilder.append("Player Edge: ~").append(new DecimalFormat("#.####").format(playerStatContainer.getEdge(i))).append("%").append(newline);
-        stringBuilder.append("95% CI (Player Edge): +/- ").append(new DecimalFormat("#.####").format(playerStatContainer.getEdgeMarginOfError(i))).append("%").append(newline);
+        section(report, "Volatility");
+        line(report, "Standard deviation", "%.3f units per round".formatted(stats.getStandardDeviation()));
+        line(report, "Variance", "%.3f squared units per round".formatted(stats.getVariance()));
+        line(report, "Max drawdown", "%s (%,.1f units)".formatted(dollars(stats.getMaxDrawdown(), 2), stats.getUnitMaxDrawdown()));
 
-        stringBuilder.append(newline);
-        stringBuilder.append("Information").append(newline);
-        stringBuilder.append("EV (units/round): ~").append(df.format(playerStatistics.getUnitEV())).append(newline);
-        stringBuilder.append("Standard Deviation (units): ~").append(df.format(playerStatistics.getStandardDeviation())).append(newline);
-        stringBuilder.append("Variance (units): ~").append(df.format(playerStatistics.getVariance())).append(newline);
-        stringBuilder.append(newline);
-        stringBuilder.append("Additional Information").append(newline);
-        stringBuilder.append("Risk of Ruin: ~").append(df.format(playerStatistics.getROR())).append("%").append(newline);
-        stringBuilder.append("Max Drawdown: ~$").append(df.format(playerStatistics.getMaxDrawdown()))
-                .append(" (").append(df.format(playerStatistics.getUnitMaxDrawdown())).append(" units)").append(newline);
-        stringBuilder.append("N0 (rounds): ~").append(String.format("%,d", (int) Math.ceil(playerStatistics.getNZero()))).append(newline);
-        stringBuilder.append("Sharpe Ratio: ~").append(new DecimalFormat("#.####").format(playerStatistics.getSharpeRatio())).append(newline);
+        section(report, "Risk and efficiency");
+        line(report, "Risk of ruin", "%.2f%% starting from %s".formatted(stats.getROR(), dollars(stats.getStartingBankroll(), 2)));
+        line(report, "N0", "%,d rounds".formatted((long) Math.ceil(stats.getNZero())));
+        line(report, "Sharpe ratio", "%.4f per round".formatted(stats.getSharpeRatio()));
 
-        return stringBuilder.toString();
+        return report.toString();
+    }
+
+    private static void section(StringBuilder report, String title) {
+        report.append("%n%s%n".formatted(title));
+    }
+
+    private static void line(StringBuilder report, String label, String value) {
+        report.append("  %-20s %s%n".formatted(label + ":", value));
+    }
+
+    private static String interval(String lower, String upper) {
+        return "(" + lower + ", " + upper + ")";
+    }
+
+    private static String dollars(double amount, int decimals) {
+        return (amount < 0 ? "-$" : "$") + ("%,." + decimals + "f").formatted(Math.abs(amount));
+    }
+
+    private static String signedDollars(double amount) {
+        return (amount > 0 ? "+" : "") + dollars(amount, 2);
+    }
+
+    private static String percent(double value) {
+        return "%.4f%%".formatted(value);
     }
 
     /**

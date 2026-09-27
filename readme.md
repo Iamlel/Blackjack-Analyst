@@ -72,30 +72,29 @@ mvn compile exec:java -Dexec.mainClass=me.lel.Main
 [`Main`](src/main/java/me/lel/Main.java) seats one Hi-Lo counter with a $10,000 bankroll at a six-deck table with the default rules. The counter plays by [`H17Deviations.csv`](src/main/resources/H17Deviations.csv), bets by [`samplebet.csv`](src/main/resources/samplebet.csv) and takes insurance at a true count of 3 or more. After 50 million rounds a chart window opens and this prints:
 
 ```text
-Information
-Rounds: 50,000,000
-Bankroll: ~11,118,760
-Starting Bankroll: ~10,000
-Difference: ~11,108,760
+Player 1 after 50,000,000 rounds (1 unit = $10)
 
-Profit
-EV ($/round): ~$0.22
-95% CI ($/round): +/- $0.0119
-EV ($/hr): ~$22.22
-Average Bet ($/round): ~$21.11
-Player Edge: ~1.0522%
-95% CI (Player Edge): +/- 0.0565%
+Bankroll
+  Starting:            $10,000.00
+  Ending:              $11,118,760.00
+  Change:              +$11,108,760.00
 
-Information
-EV (units/round): ~0.02
-Standard Deviation (units): ~4.3
-Variance (units): ~18.5
+Expected value
+  Per round:           $0.2222  95% CI ($0.2103, $0.2341)
+  Per round in units:  0.0222 units
+  Per hour:            $22.22 at 100 rounds per hour
+  Average bet:         $21.11 per round
+  Player edge:         1.0522%  95% CI (0.9958%, 1.1087%)
 
-Additional Information
-Risk of Ruin: ~9.06%
-Max Drawdown: ~$37,655 (3,765.5 units)
-N0 (rounds): ~37,486
-Sharpe Ratio: ~0.0052
+Volatility
+  Standard deviation:  4.302 units per round
+  Variance:            18.504 squared units per round
+  Max drawdown:        $37,655.00 (3,765.5 units)
+
+Risk and efficiency
+  Risk of ruin:        9.06% starting from $10,000.00
+  N0:                  37,486 rounds
+  Sharpe ratio:        0.0052 per round
 ```
 
 [Reading the results](#reading-the-results) explains each line.
@@ -337,19 +336,21 @@ Money moves through `pay` and `take`, and the statistics come from the change in
 
 ### Reading the results
 
-| Line | Meaning |
-|---|---|
-| Rounds | Rounds recorded. Rounds a player sits out count, as zero. |
-| Bankroll, Starting Bankroll, Difference | Where the bankroll ended, where it started and the change. |
-| EV ($/round) | Average profit per round, with a 95% confidence interval. |
-| EV ($/hr) | EV times the rounds per hour you pass to `getResults`. `Main` uses 100. |
-| Average Bet | Average initial bet per round. Rounds sat out count as $0. |
-| Player Edge | Average profit divided by average initial bet, with its own 95% confidence interval. |
-| EV, Standard Deviation, Variance (units) | The same numbers measured in units. |
-| Risk of Ruin | The chance of losing the whole starting bankroll if you kept playing forever at this EV and variance. |
-| Max Drawdown | The largest drop from a bankroll high to a later low. |
-| N0 | Rounds until total EV equals one standard deviation of results. Lower is better. |
-| Sharpe Ratio | EV divided by standard deviation, per round. |
+| Section | Line | Meaning |
+|---|---|---|
+| Header | Rounds, unit | Rounds recorded, counting rounds a player sits out as zero, and the size of one unit (the table minimum). |
+| Bankroll | Starting, Ending, Change | Where the bankroll started, where it ended and the difference. |
+| | Status | Only shown once a player can no longer cover the table minimum. |
+| Expected value | Per round | Average profit per round, with a 95% confidence interval written as (lower, upper). |
+| | Per round in units | The same number measured in units. |
+| | Per hour | EV times the rounds per hour you pass to `getResults`. `Main` uses 100. |
+| | Average bet | Average initial bet per round. Rounds sat out count as $0. |
+| | Player edge | Average profit divided by average initial bet, with its own 95% confidence interval. |
+| Volatility | Standard deviation, Variance | How much a round's result swings, measured in units. |
+| | Max drawdown | The largest drop from a bankroll high to a later low. |
+| Risk and efficiency | Risk of ruin | The chance of losing the whole starting bankroll if you kept playing forever at this EV and variance. |
+| | N0 | Rounds until total EV equals one standard deviation of results. Lower is better. |
+| | Sharpe ratio | EV divided by standard deviation, per round. |
 
 The numbers are also available from code. `simulation.getStats(i)` returns player `i`'s `BlackjackTally`, with methods like `getEV()`, `getROR(bankroll)`, `getNZero()` and `getSCORE()`, and `simulation.getPlayerStatContainer().getEdge(i)` gives the edge.
 
@@ -399,7 +400,7 @@ A `FakePlayer`'s bankroll starts at $0, so the risk of ruin in the report means 
 </details>
 
 <details>
-<summary><b>My player shows "Status: Dead". What happened?</b></summary>
+<summary><b>My player's status says "Dead". What happened?</b></summary>
 
 Their bankroll dropped below the table minimum. After that they sit out and every round counts as zero for them, and once every player is dead no more rounds are recorded. Give them a bigger bankroll or use a `FakePlayer`.
 
