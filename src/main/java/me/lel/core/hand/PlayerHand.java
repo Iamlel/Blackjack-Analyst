@@ -53,13 +53,12 @@ public class PlayerHand extends Hand {
     }
 
     /**
-     * Returns whether the hand is a two-card pair. The cards must share a rank, so a jack and a king are not a pair
-     * even though both are worth 10.
+     * Returns whether the hand is a two-card pair based on value.
      *
      * @return {@code true} if the hand is a pair
      */
     public boolean canSplit() {
-        return (super.isInitial() && super.getFirst() == super.getSecond());
+        return (super.isInitial() && super.getFirst().getValue() == super.getSecond().getValue());
     }
 
     /**

@@ -3,8 +3,7 @@ package me.lel.core.hand;
 import me.lel.core.Card;
 
 /**
- * A blackjack hand. It keeps the first two cards and a running total. An ace counts as 11 unless that would take the
- * total over 21, in which case it counts as 1. Going over 21 is a bust, which loses.
+ * A blackjack hand. It keeps the first two cards and a running total.
  */
 public class Hand {
     private final Card first;
@@ -41,7 +40,7 @@ public class Hand {
     }
 
     /**
-     * Adds a card to the hand. Afterwards the hand is no longer {@linkplain #isInitial() initial}.
+     * Adds a card to the hand. Afterward the hand is no longer {@linkplain #isInitial() initial}.
      *
      * @param card the card to add
      */
